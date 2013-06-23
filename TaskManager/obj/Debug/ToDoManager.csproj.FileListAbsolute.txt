@@ -1,0 +1,13 @@
+E:\prog_projects\C#\ToDoManager\ToDoManager\bin\Debug\ToDoManager.exe.config
+E:\prog_projects\C#\ToDoManager\ToDoManager\bin\Debug\ToDoManager.exe
+E:\prog_projects\C#\ToDoManager\ToDoManager\bin\Debug\ToDoManager.pdb
+E:\prog_projects\C#\ToDoManager\ToDoManager\obj\Debug\ResolveAssemblyReference.cache
+E:\prog_projects\C#\ToDoManager\ToDoManager\obj\Debug\ToDoManager.exe
+E:\prog_projects\C#\ToDoManager\ToDoManager\obj\Debug\ToDoManager.pdb
+E:\prog_projects\C#\ToDoManager\ToDoManager\bin\Debug\Google.Apis.dll
+E:\prog_projects\C#\ToDoManager\ToDoManager\bin\Debug\Google.Apis.Samples.Helper.dll
+E:\prog_projects\C#\ToDoManager\ToDoManager\bin\Debug\Google.Apis.Tasks.v1.dll
+E:\prog_projects\C#\ToDoManager\ToDoManager\bin\Debug\DotNetOpenAuth.dll
+E:\prog_projects\C#\ToDoManager\ToDoManager\bin\Debug\Google.Apis.Authentication.OAuth2.dll
+E:\prog_projects\C#\ToDoManager\ToDoManager\bin\Debug\Newtonsoft.Json.Net35.dll
+E:\prog_projects\C#\ToDoManager\ToDoManager\bin\Debug\log4net.dll
