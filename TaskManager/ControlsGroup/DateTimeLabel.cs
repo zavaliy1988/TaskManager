@@ -26,7 +26,6 @@ namespace TaskManager
 		public DateTimeLabel(string titleLabelText)
 		{
 			this.Size = new Size(245,25);
-			//this.BackColor = Color.White;
 			
 			_titleLabel = new Label();
 			_titleLabel.Size = new Size(90,30);
@@ -35,8 +34,8 @@ namespace TaskManager
 			this.Controls.Add(_titleLabel);
 			
 			_dateTimePicker = new DateTimePicker();
-			_dateTimePicker.Location = new Point(90,2);
-			_dateTimePicker.Size = new Size(150,30);
+			_dateTimePicker.Location = new Point(110,2);
+			_dateTimePicker.Size = new Size(130,30);
 			_dateTimePicker.Format = DateTimePickerFormat.Custom;
 			_dateTimePicker.CustomFormat = " ";
 			this.Controls.Add(_dateTimePicker);
@@ -49,7 +48,7 @@ namespace TaskManager
 			int dateTimeComparisonResult = DateTime.Compare(_settedDateTime, DateTimePicker.MaximumDateTime);
 			if (dateTimeComparisonResult <= 0)
 			{
-				_dateTimePicker.CustomFormat = "dd-MM-yyyy    hh:mm:ss";
+				_dateTimePicker.CustomFormat = "dd-MM-yyyy   hh:mm:ss";
 				_dateTimePicker.Value = _settedDateTime;
 			}
 			else 

@@ -9,9 +9,9 @@
 using System;
 using System.Windows.Forms;
 using System.Net;
-using System.Web;
 using System.Text;
 
+using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
@@ -22,11 +22,11 @@ using DotNetOpenAuth.OAuth2;
 using Google.Apis.Authentication;
 using Google.Apis.Authentication.OAuth2;
 using Google.Apis.Authentication.OAuth2.DotNetOpenAuth;
+
 using Google.Apis.Services;
 using Google.Apis.Tasks.v1;
 using Google.Apis.Tasks.v1.Data;
 using Google.Apis.Util;
-using Google.Apis.Samples.Helper;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -42,7 +42,7 @@ namespace TaskManager
 	/// 
 	public delegate void GoogleRequestsListenerCodeReceivedDelegate(string code);
 
-	public class AUTHENTICATOR
+	public class Authenticator
 	{
 		string _clientId;
 		string _clientSecret;
@@ -56,13 +56,13 @@ namespace TaskManager
 		string _expiresIn;
 		string _refreshToken;	
 
-		GOOGLEREQUESTSLISTENER _googleRequestsListener;
-		AUTHENTICATEFORM _authenticateForm;
+		GoogleRequestsListener _googleRequestsListener;
+		AuthenticateForm _authenticateForm;
 
 		GoogleRequestsListenerCodeReceivedDelegate _googleRequestsListenerCodeReceivedDlg;
 
 
-		public AUTHENTICATOR(string clientId, string clientSecret, string redirectUri, string state, string loginHint)
+		public Authenticator(string clientId, string clientSecret, string redirectUri, string state, string loginHint)
 		{
 			_clientId = clientId;
 			_clientSecret = clientSecret;
@@ -71,7 +71,7 @@ namespace TaskManager
 			_loginHint = loginHint;
 
 			_googleRequestsListenerCodeReceivedDlg = _googleRequestsListenerCodeReceived;
-			_googleRequestsListener = new GOOGLEREQUESTSLISTENER(_redirectUri, _googleRequestsListenerCodeReceivedDlg);
+			_googleRequestsListener = new GoogleRequestsListener(_redirectUri, _googleRequestsListenerCodeReceivedDlg);
 
 		}
 
@@ -118,34 +118,17 @@ namespace TaskManager
 		private void AuthenticateApplication()
 		{
 			string authenticateURL = getAuthenticateUrl();
-			_authenticateForm = new AUTHENTICATEFORM(authenticateURL);
+			_authenticateForm = new AuthenticateForm(authenticateURL);
 			_authenticateForm.Show();
-			
-			//HtmlDocument d = _authenticateForm.webBrowser.Document;
-			
-			Debug.WriteLine("d = " + _authenticateForm.webBrowser.DocumentText);
-			//System.Windows.Forms.control c = _authenticateForm.webBrowser.Controls;
-			//for(int i = 0; i < c.Count; i++)
-			//{
-			//	Debug.WriteLine("c = " + c[i].ID);
-			//}
-			//System.Windows.Forms.HtmlElementCollection r = _authenticateForm.webBrowser.Document.All;
 		}
 
 		private void _googleRequestsListenerCodeReceived(string code)
 		{
 			if (_authenticateForm.InvokeRequired)
 			{
-			//	HtmlElementCollection d = _authenticateForm.webBrowser.Document.All;
-			//	Debug.WriteLine("d = " + d.Count);
-				//Debug.WriteLine("doc title = " + d.Title);
-				//Debug.WriteLine("doc body = " + d.Body);
-				
-				
 				_authenticateForm.Invoke(new MethodInvoker(delegate
 				                                           {
 				                                           	_authenticateForm.Hide();
-				                                           	//_authenticateForm.Dispose();
 				                                           	}));
 				_code = code;
 				_requestTokensBegin(_code);

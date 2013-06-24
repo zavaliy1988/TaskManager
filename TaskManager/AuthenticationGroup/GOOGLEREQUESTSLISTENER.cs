@@ -17,16 +17,16 @@ using System.Diagnostics;
 namespace TaskManager
 {
 	/// <summary>
-	/// Description of CUSTOMHTTPLISTENER.
+	/// Description of GoogleRequestsListener.
 	/// </summary>
-	public class GOOGLEREQUESTSLISTENER
+	public class GoogleRequestsListener
 	{
 		string _code;
 		Thread _listenerThread;
 		HttpListener _listener;
 		GoogleRequestsListenerCodeReceivedDelegate _googleRequestsListenerCodeReceivedDlg;
 
-		public GOOGLEREQUESTSLISTENER(string urlToListen, GoogleRequestsListenerCodeReceivedDelegate googleRequestsListenerCodeReceivedDlg)
+		public GoogleRequestsListener(string urlToListen, GoogleRequestsListenerCodeReceivedDelegate googleRequestsListenerCodeReceivedDlg)
 		{
 			 _googleRequestsListenerCodeReceivedDlg = googleRequestsListenerCodeReceivedDlg;
 

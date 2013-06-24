@@ -20,11 +20,11 @@ namespace TaskManager
 	/// <summary>
 	/// Description of AUTHENTICATEFORM.
 	/// </summary>
-	public class AUTHENTICATEFORM : Form
+	public class AuthenticateForm : Form
 	{
 		public WebBrowser webBrowser;
 		
-		public AUTHENTICATEFORM(string authenticateUri)
+		public AuthenticateForm(string authenticateUri)
 		{
 			this.Size = new Size(600,400);
 			
@@ -34,17 +34,7 @@ namespace TaskManager
 			
 			webBrowser.Navigate(authenticateUri);
 			
-
-			
 			this.Controls.Add(webBrowser);
-
-//			for(int i = 0; i < coll.Count; i++)
-//			{
-//				HtmlElement m = coll[i];
-//				Debug.WriteLine("m = " + m.Name);
-//			}
-			
-			
 		}
 		
 		private void webBrowser1_Navigated(object sender, WebBrowserNavigatedEventArgs e)

@@ -32,19 +32,20 @@ namespace TaskManager
 	public partial class MainForm : Form
 	{
 		CustomTreeView _customTreeView;
+		
 		TextBox _taskTitleTextBox;
 		TextBox _taskNotesTextBox;
-		
 		DateTimeLabel _taskUpdatedDateLabel;
 		DateTimeLabel _taskDueDateLabel;
 		DateTimeLabel _taskCurrentDateLabel;
+		CompletedLabel _taskCompletedLabel;
 		
 		Timer _timer;
 		
-		Dictionary<string,CUSTOMTOOLBARBUTTON> _toolbarButtonsDict;
+		Dictionary<string,CustomToolbarButton> _toolbarButtonsDict;
 		
 		
-		AUTHENTICATOR _authenticator;
+		Authenticator _authenticator;
 		
 		DBManager _dbManager;
 		
@@ -91,18 +92,23 @@ namespace TaskManager
 			_taskCurrentDateLabel.Location = new Point(243, 475);
 			_taskCurrentDateLabel.Enabled = false;
 			this.Controls.Add(_taskCurrentDateLabel);
-	
+			
+			_taskCompletedLabel = new CompletedLabel("Completed:");
+			_taskCompletedLabel.Location = new Point(243,505);
+			_taskCompletedLabel.checkBoxClick += new EventHandler(_onTickCompletedLabel_checkBoxClick);
+			this.Controls.Add(_taskCompletedLabel);
+			
 			_timer = new Timer();
 			_timer.Interval = 1000;
 			_timer.Tick += new EventHandler(_onTimerTick);
 			_timer.Start();
 			
-			_toolbarButtonsDict = new Dictionary<string, CUSTOMTOOLBARBUTTON>();
+			_toolbarButtonsDict = new Dictionary<string,CustomToolbarButton>();
 			
 			
 			for(int i = 0; i < 5; i++)
 			{
-				CUSTOMTOOLBARBUTTON toolbarButton = new CUSTOMTOOLBARBUTTON();
+				CustomToolbarButton toolbarButton = new CustomToolbarButton();
 				toolbarButton.BackgroundImageLayout = ImageLayout.Center;
 				toolbarButton.Location = new Point(5 + i * toolbarButton.Size.Width + i * 5, 5);
 				this.Controls.Add(toolbarButton);
@@ -124,7 +130,7 @@ namespace TaskManager
 			
 			_toolbarButtonsDict["addtask1"].Click += new EventHandler(onDBButtonClick);
 			
-			_authenticator = new AUTHENTICATOR("167957637234.apps.googleusercontent.com",
+			_authenticator = new Authenticator("167957637234.apps.googleusercontent.com",
 			                                  "rNm8WIonWEdVJKzWf3N76RaW",
 			                                  "http://localhost:54321/",
 			                                  "anystring",
@@ -179,6 +185,11 @@ namespace TaskManager
 		}
 		
 		
+		private void _onTickCompletedLabel_checkBoxClick(object sender, EventArgs e)
+		{
+			Debug.WriteLine("Checkbox changed state");
+		}
+		
 		//Timer Section
 		private void _onTimerTick(object sender, EventArgs e)
 		{
@@ -189,7 +200,7 @@ namespace TaskManager
 		//ToolBar Buttons Section
 		void onAddTaskButtonClick(object sender, EventArgs e)
 		{
-
+		
 		}
 		
 		void onDBButtonClick(object sender, EventArgs e)

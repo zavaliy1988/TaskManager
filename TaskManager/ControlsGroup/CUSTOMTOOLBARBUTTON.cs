@@ -15,9 +15,9 @@ namespace TaskManager
 	/// <summary>
 	/// Description of CUSTOMTOOLBARBUTTON.
 	/// </summary>
-	public class CUSTOMTOOLBARBUTTON : Button
+	public class CustomToolbarButton : Button
 	{
-		public CUSTOMTOOLBARBUTTON()
+		public CustomToolbarButton()
 		{
 			this.Size = new Size(54,54);
 		}

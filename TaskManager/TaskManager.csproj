@@ -71,10 +71,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AuthenticationGroup\AUTHENTICATEFORM.cs" />
-    <Compile Include="AuthenticationGroup\AUTHENTICATOR.cs" />
-    <Compile Include="AuthenticationGroup\GOOGLEREQUESTSLISTENER.cs" />
-    <Compile Include="ControlsGroup\CUSTOMTOOLBARBUTTON.cs" />
+    <Compile Include="AuthenticationGroup\AuthenticateForm.cs" />
+    <Compile Include="AuthenticationGroup\Authenticator.cs" />
+    <Compile Include="AuthenticationGroup\GoogleRequestsListener.cs" />
+    <Compile Include="ControlsGroup\CompletedLabel.cs" />
+    <Compile Include="ControlsGroup\CustomToolbarButton.cs" />
     <Compile Include="ControlsGroup\DateTimeLabel.cs" />
     <Compile Include="DatabaseGroup\DBTask.cs" />
     <Compile Include="DatabaseGroup\DBTaskList.cs" />
