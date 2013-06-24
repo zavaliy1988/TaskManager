@@ -1,8 +1,8 @@
 ﻿/*
  * Created by SharpDevelop.
- * User: Aleks
- * Date: 08.06.2013
- * Time: 0:05
+ * User: Администратор
+ * Date: 6/18/2013
+ * Time: 12:05 AM
  * 
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
@@ -10,6 +10,10 @@ using System;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Web;
+using System.Web.UI.WebControls;
+using System.Net;
+
+using System.Diagnostics;
 
 namespace TaskManager
 {
@@ -18,28 +22,58 @@ namespace TaskManager
 	/// </summary>
 	public class AUTHENTICATEFORM : Form
 	{
-		WebBrowser _browser;
+		public WebBrowser webBrowser;
 		
-		public AUTHENTICATEFORM(string urlToShow)
+		public AUTHENTICATEFORM(string authenticateUri)
 		{
-			this.Text = "Authenticate";
 			this.Size = new Size(600,400);
-			this.MinimumSize = new Size(500,370);
-			this.MinimizeBox = false;
-			this.MaximizeBox = false;
 			
-			_browser = new WebBrowser();
-			_browser.Size = new Size(this.Size.Width-8, this.Size.Height);
-			_browser.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom;
-			_browser.Navigate(urlToShow);
+			webBrowser = new WebBrowser();
+			webBrowser.Size = new Size(this.Size.Width, this.Size.Height);
+			webBrowser.Navigated += new WebBrowserNavigatedEventHandler(webBrowser1_Navigated);
 			
-			this.Controls.Add(_browser);
+			webBrowser.Navigate(authenticateUri);
+			
+
+			
+			this.Controls.Add(webBrowser);
+
+//			for(int i = 0; i < coll.Count; i++)
+//			{
+//				HtmlElement m = coll[i];
+//				Debug.WriteLine("m = " + m.Name);
+//			}
+			
 			
 		}
 		
-		public void Navigate(string urlToShow)
+		private void webBrowser1_Navigated(object sender, WebBrowserNavigatedEventArgs e)
 		{
-			_browser.Navigate(urlToShow);
+//			System.Windows.Forms.HtmlElementCollection r = webBrowser.Document.All;
+//			for(int i = 0; i < r.Count; i++)
+//			{
+//				Debug.WriteLine("r.Name = " + r[i].Name + "\n" +
+//				                "r.InnerText = " + r[i].InnerText + "\n" +
+//				                "r.OuterText = " + r[i].OuterText + "\n" +
+//								"r.ID = " + r[i].Id);
+//			}
+//			
+//			System.Windows.Forms.HtmlElementCollection b = webBrowser.Document.All.GetElementsByName("Passwd");
+//			for(int i = 0; i < b.Count; i++)
+//			{
+//				Debug.WriteLine("b = " + b[i].Name);
+//				b[i].InnerText = "14921988";
+//				//b[i].OuterText = "DDD";
+//			}
+//			
+//			System.Windows.Forms.HtmlElementCollection n = webBrowser.Document.All.GetElementsByName("Email");
+//			for(int i = 0; i < n.Count; i++)
+//			{
+//				Debug.WriteLine("b = " + n[i].Name);
+//				n[i].InnerText = "tasktest2013";
+//			}
 		}
 	}
+	
+	
 }

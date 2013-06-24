@@ -41,7 +41,7 @@ namespace TaskManager
 	/// </summary>
 	/// 
 	public delegate void GoogleRequestsListenerCodeReceivedDelegate(string code);
-	
+
 	public class AUTHENTICATOR
 	{
 		string _clientId;
@@ -49,19 +49,19 @@ namespace TaskManager
 		string _redirectUri;
 		string _state;
 		string _loginHint;
-		
+
 		string _code;
 		string _accessToken;
 		string _tokenType;
 		string _expiresIn;
 		string _refreshToken;	
-		
+
 		GOOGLEREQUESTSLISTENER _googleRequestsListener;
 		AUTHENTICATEFORM _authenticateForm;
-		
+
 		GoogleRequestsListenerCodeReceivedDelegate _googleRequestsListenerCodeReceivedDlg;
-		
-		
+
+
 		public AUTHENTICATOR(string clientId, string clientSecret, string redirectUri, string state, string loginHint)
 		{
 			_clientId = clientId;
@@ -69,10 +69,10 @@ namespace TaskManager
 			_redirectUri = redirectUri;
 			_state = state;
 			_loginHint = loginHint;
-			
+
 			_googleRequestsListenerCodeReceivedDlg = _googleRequestsListenerCodeReceived;
 			_googleRequestsListener = new GOOGLEREQUESTSLISTENER(_redirectUri, _googleRequestsListenerCodeReceivedDlg);
-			
+
 		}
 
 		public string getAuthenticateUrl()
@@ -85,13 +85,12 @@ namespace TaskManager
 			"redirect_uri=" +_redirectUri + "&" + 
 			"state=" + _state + "&" + 
 			"login_hint=" + _loginHint;
-			
+
 			return authenticateUrl;
 		}
-		
+
 		public TasksService getTasksService()
 		{
-			
 			if (_accessToken == null) 
 			{
 				AuthenticateApplication();
@@ -115,18 +114,34 @@ namespace TaskManager
 					return null;
 				}
 		}
-		
+
 		private void AuthenticateApplication()
 		{
 			string authenticateURL = getAuthenticateUrl();
 			_authenticateForm = new AUTHENTICATEFORM(authenticateURL);
 			_authenticateForm.Show();
+			
+			//HtmlDocument d = _authenticateForm.webBrowser.Document;
+			
+			Debug.WriteLine("d = " + _authenticateForm.webBrowser.DocumentText);
+			//System.Windows.Forms.control c = _authenticateForm.webBrowser.Controls;
+			//for(int i = 0; i < c.Count; i++)
+			//{
+			//	Debug.WriteLine("c = " + c[i].ID);
+			//}
+			//System.Windows.Forms.HtmlElementCollection r = _authenticateForm.webBrowser.Document.All;
 		}
-				
+
 		private void _googleRequestsListenerCodeReceived(string code)
 		{
 			if (_authenticateForm.InvokeRequired)
 			{
+			//	HtmlElementCollection d = _authenticateForm.webBrowser.Document.All;
+			//	Debug.WriteLine("d = " + d.Count);
+				//Debug.WriteLine("doc title = " + d.Title);
+				//Debug.WriteLine("doc body = " + d.Body);
+				
+				
 				_authenticateForm.Invoke(new MethodInvoker(delegate
 				                                           {
 				                                           	_authenticateForm.Hide();
@@ -136,7 +151,7 @@ namespace TaskManager
 				_requestTokensBegin(_code);
 			}
 		}
-		
+
 		private void _requestTokensBegin(string code)
 		{
 			using (var webClient = new WebClient())
@@ -152,7 +167,7 @@ namespace TaskManager
 				webClient.UploadValuesCompleted += new UploadValuesCompletedEventHandler(_receiveTokensCompleted);
 			}
 		}
-		
+
 		private void _receiveTokensCompleted(object sender, UploadValuesCompletedEventArgs e)
 		{
 			JToken requstTokensResult = JObject.Parse(Encoding.ASCII.GetString(e.Result));
@@ -160,9 +175,9 @@ namespace TaskManager
 			_tokenType = requstTokensResult.SelectToken("token_type").ToString();
 			_expiresIn = requstTokensResult.SelectToken("expires_in").ToString();
 			_refreshToken = requstTokensResult.SelectToken("refresh_token").ToString();
-			
+
 			Debug.WriteLine("Access_token = " + _accessToken);
-			
+
 			var provider = new NativeApplicationClient(GoogleAuthenticationServer.Description)
                 {
                     ClientIdentifier = _clientId,
@@ -171,7 +186,7 @@ namespace TaskManager
 			var auth = new OAuth2Authenticator<NativeApplicationClient>(provider, _createAuthorizationState);
 			var service = new TasksService(new BaseClientService.Initializer() { Authenticator = auth });		
 		}
-		
+
 		private IAuthorizationState _createAuthorizationState(NativeApplicationClient arg)
   		{
       		IAuthorizationState state = new AuthorizationState(new[] { TasksService.Scopes.Tasks.GetStringValue() });
@@ -180,6 +195,6 @@ namespace TaskManager
 	   		return state;
   		}
 
-		
+
 	}
 }

@@ -24,3 +24,12 @@ E:\prog_projects\GitProjects\TaskManager\TaskManager\bin\Debug\Newtonsoft.Json.N
 E:\prog_projects\GitProjects\TaskManager\TaskManager\obj\Debug\ResolveAssemblyReference.cache
 E:\prog_projects\GitProjects\TaskManager\TaskManager\obj\Debug\ToDoManager.exe
 E:\prog_projects\GitProjects\TaskManager\TaskManager\obj\Debug\ToDoManager.pdb
+C:\Projects\TaskManager\TaskManager\bin\Debug\TaskManager.exe.config
+C:\Projects\TaskManager\TaskManager\bin\Debug\TaskManager.exe
+C:\Projects\TaskManager\TaskManager\bin\Debug\TaskManager.pdb
+C:\Projects\TaskManager\TaskManager\bin\Debug\log4net.dll
+C:\Projects\TaskManager\TaskManager\bin\Debug\Newtonsoft.Json.Net35.dll
+C:\Projects\TaskManager\TaskManager\bin\Debug\Newtonsoft.Json.Net35.xml
+C:\Projects\TaskManager\TaskManager\obj\Debug\ResolveAssemblyReference.cache
+C:\Projects\TaskManager\TaskManager\obj\Debug\TaskManager.exe
+C:\Projects\TaskManager\TaskManager\obj\Debug\TaskManager.pdb

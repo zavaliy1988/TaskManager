@@ -13,7 +13,7 @@ using System.Threading;
 using System.Text;
 
 using System.Diagnostics;
-	
+
 namespace TaskManager
 {
 	/// <summary>
@@ -25,22 +25,22 @@ namespace TaskManager
 		Thread _listenerThread;
 		HttpListener _listener;
 		GoogleRequestsListenerCodeReceivedDelegate _googleRequestsListenerCodeReceivedDlg;
-		
+
 		public GOOGLEREQUESTSLISTENER(string urlToListen, GoogleRequestsListenerCodeReceivedDelegate googleRequestsListenerCodeReceivedDlg)
 		{
 			 _googleRequestsListenerCodeReceivedDlg = googleRequestsListenerCodeReceivedDlg;
-			
+
 			_listener = new HttpListener();
 			_listener.Prefixes.Add(urlToListen);
-			
+
 			_listenerThread = new Thread(_listenerThreadMain);
 			_listenerThread.Start();
 		}
-		
+
 		private void _listenerThreadMain()
 		{
 			_listener.Start();
-			
+
 			while(true)
 			{
 				// Note: The GetContext method blocks while waiting for a request. 
@@ -61,7 +61,7 @@ namespace TaskManager
     			}
 			}
 		}
-	
-	
+
+
 	}
 }

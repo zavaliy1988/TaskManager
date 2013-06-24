@@ -40,10 +40,10 @@ namespace TaskManager
 			// MainForm
 			// 
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.Text = "ToDoManager";
+			this.Text = "TaskManager";
 			this.Name = "MainForm";
 			
-			this.Size = new System.Drawing.Size(700,500);
+			this.Size = new System.Drawing.Size(700,600);
 		}
 	}
 }
