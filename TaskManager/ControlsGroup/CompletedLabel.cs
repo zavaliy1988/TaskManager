@@ -26,7 +26,7 @@ namespace TaskManager
 		public CompletedLabel(string titleLabelText)
 		{
 			this.Size = new Size(245,25);
-			
+						
 			_titleLabel = new Label();
 			_titleLabel.Size = new Size(110,30);
 			_titleLabel.Font = new Font("Arial", 14);
@@ -38,6 +38,11 @@ namespace TaskManager
 			_checkBox.Appearance = Appearance.Normal;
 			_checkBox.Click += new EventHandler(_onCheckBoxClick);
 			this.Controls.Add(_checkBox);
+		}
+		
+		public bool checkBoxChecked()
+		{
+			return _checkBox.Checked;
 		}
 		
 		private void _onCheckBoxClick(object sender, EventArgs e)

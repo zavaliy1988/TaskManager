@@ -37,8 +37,14 @@ namespace TaskManager
 			_dateTimePicker.Location = new Point(110,2);
 			_dateTimePicker.Size = new Size(130,30);
 			_dateTimePicker.Format = DateTimePickerFormat.Custom;
-			_dateTimePicker.CustomFormat = " ";
+			_dateTimePicker.CustomFormat = "dd-MM-yyyy   hh:mm:ss";
+			_dateTimePicker.ValueChanged += new EventHandler(_onDateTimePickerValueChange);
 			this.Controls.Add(_dateTimePicker);
+		}
+		
+		public DateTime getDate()
+		{
+			return _settedDateTime;
 		}
 		
 		public void setDate(DateTime dateTime)
@@ -47,15 +53,20 @@ namespace TaskManager
 		
 			int dateTimeComparisonResult = DateTime.Compare(_settedDateTime, DateTimePicker.MaximumDateTime);
 			if (dateTimeComparisonResult <= 0)
-			{
-				_dateTimePicker.CustomFormat = "dd-MM-yyyy   hh:mm:ss";
 				_dateTimePicker.Value = _settedDateTime;
-			}
 			else 
-			{
-				_dateTimePicker.CustomFormat = " ";
 				_dateTimePicker.Value = DateTimePicker.MaximumDateTime;
-			}
+		}
+		
+		private void _onDateTimePickerValueChange(object sender, EventArgs e)
+		{
+			Debug.WriteLine("Date changed");
+		}
+		
+		protected override void OnEnabledChanged(EventArgs e)
+		{
+			base.OnEnabledChanged(e);
+			_titleLabel.Enabled = true;
 		}
 	}
 }

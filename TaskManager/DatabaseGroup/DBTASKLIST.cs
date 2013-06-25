@@ -28,7 +28,7 @@ namespace TaskManager
 			this.title = gglTasklist.Title;
 			this.selfLink = gglTasklist.SelfLink;
 			
-			this.updated = TaskManagerHelper.convertTasklistUpdateDateToDateTime(gglTasklist.Updated);
+			this.updated = TaskManagerHelper.convertTaskListUpdatedStringToDateTime(gglTasklist.Updated);
 		}
 		
 		public DBTaskList()

@@ -19,12 +19,12 @@ namespace TaskManager
 	public static class TaskManagerHelper
 	{
 		
-		public static DateTime convertTasklistUpdateDateToDateTime(string updatedDate)
+		public static DateTime convertTaskListUpdatedStringToDateTime(string gglTasklistUpdatedString)
 		{
-			if (updatedDate != null)
+			if (gglTasklistUpdatedString != null)
 			{
 			
-				StringBuilder updatedDateWithSpaceSeparators = new StringBuilder(updatedDate);
+				StringBuilder updatedDateWithSpaceSeparators = new StringBuilder(gglTasklistUpdatedString);
 				updatedDateWithSpaceSeparators.Length = 19;
 				updatedDateWithSpaceSeparators.Replace('T', ' ');
 				updatedDateWithSpaceSeparators.Replace('-', ' ');
@@ -32,7 +32,7 @@ namespace TaskManager
 				string [] dateTimeStringParts = updatedDateWithSpaceSeparators.ToString().Split(new char [] {' '});
 				int [] dateTimeIntParts = new int[dateTimeStringParts.Length];
 				
-				Debug.WriteLine("Updated Date before convert = " + updatedDate);
+				Debug.WriteLine("Updated Date before convert = " + gglTasklistUpdatedString);
 				for(int i = 0; i < dateTimeStringParts.Length; i++)
 				{
 					dateTimeIntParts[i] = Int32.Parse(dateTimeStringParts[i]);
@@ -43,9 +43,25 @@ namespace TaskManager
 				return DateTime.MaxValue;
 		}
 		
-		public static DateTime convertTaskUpdateDateToDateTime(string updateDate)
+		public static DateTime convertTaskUpdatedStringToDateTime(string gglTaskUpdatedString)
 		{
-			return convertTasklistUpdateDateToDateTime(updateDate);
+			return convertTaskListUpdatedStringToDateTime(gglTaskUpdatedString);
 		}
+		
+		//UpdatedString example:
+		//2013-06-22T00:28:02.000Z
+		public static string convertTaskListDateTimeToUpdatedString(DateTime dbTasklistDateTime)
+		{
+			return dbTasklistDateTime.Year.ToString() + "-" + dbTasklistDateTime.Month.ToString() + "-" + dbTasklistDateTime.Day.ToString() + "T" +
+			           dbTasklistDateTime.Hour.ToString() + ":" + dbTasklistDateTime.Minute.ToString() + ":" + dbTasklistDateTime.Second.ToString() + ".000Z";
+		}
+		
+		public static string convertTaskDateTimeToUpdatedString(DateTime dbTaskDateTime)
+		{
+			Debug.WriteLine("Converted DateTime = " + convertTaskListDateTimeToUpdatedString(dbTaskDateTime));
+			return convertTaskListDateTimeToUpdatedString(dbTaskDateTime);
+		}
+		
+		
 	}
 }

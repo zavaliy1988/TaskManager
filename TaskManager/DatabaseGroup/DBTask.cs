@@ -27,12 +27,12 @@ namespace TaskManager
 			this.taskListId = gglTaskListId;
 			this.title = gglTask.Title;
 			this.selfLink = gglTask.SelfLink;
-			this.updated = TaskManagerHelper.convertTaskUpdateDateToDateTime(gglTask.Updated);
+			this.updated = TaskManagerHelper.convertTaskUpdatedStringToDateTime(gglTask.Updated);
 			this.notes = gglTask.Notes;
 			this.position = gglTask.Position;
 			this.parent = gglTask.Parent;
 			this.status = gglTask.Status;
-			this.due = TaskManagerHelper.convertTaskUpdateDateToDateTime(gglTask.Due);
+			this.due = TaskManagerHelper.convertTaskUpdatedStringToDateTime(gglTask.Due);
 			this.completed = gglTask.Completed;
 			this.deleted = gglTask.Deleted;
 		}
@@ -41,6 +41,7 @@ namespace TaskManager
 		{
 			
 		}
+		
 		
 		[Column(IsPrimaryKey = true)]
 		public string id;
@@ -66,5 +67,24 @@ namespace TaskManager
     	public string completed;
     	[Column]
     	public Nullable<bool> deleted;
+    	
+    	
+    	public Task toGGLTask()
+		{
+    		Task gglTask = new Task();
+    		gglTask.Id = this.id;
+    		gglTask.Title = this.title;
+    		gglTask.SelfLink = this.selfLink;
+    		gglTask.Updated = TaskManagerHelper.convertTaskDateTimeToUpdatedString(this.updated);
+    		gglTask.Notes = this.notes;
+    		gglTask.Position = this.position;
+    		gglTask.Parent = this.parent;
+    		gglTask.Status = this.status;
+    		gglTask.Due = TaskManagerHelper.convertTaskDateTimeToUpdatedString(this.due);
+    		gglTask.Completed = this.completed;
+    		gglTask.Deleted = this.deleted;
+    		
+    		return gglTask;
+    	}
 	}
 }

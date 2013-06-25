@@ -43,7 +43,7 @@ namespace TaskManager
 			this.Text = "TaskManager";
 			this.Name = "MainForm";
 			
-			this.Size = new System.Drawing.Size(700,600);
+			this.Size = new System.Drawing.Size(700,620);
 		}
 	}
 }

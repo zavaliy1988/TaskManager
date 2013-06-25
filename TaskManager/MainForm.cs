@@ -38,9 +38,10 @@ namespace TaskManager
 		DateTimeLabel _taskUpdatedDateLabel;
 		DateTimeLabel _taskDueDateLabel;
 		DateTimeLabel _taskCurrentDateLabel;
-		CompletedLabel _taskCompletedLabel;
-		
 		Timer _timer;
+		
+		CompletedLabel _taskCompletedLabel;
+		Button _taskSaveChangesButton;
 		
 		Dictionary<string,CustomToolbarButton> _toolbarButtonsDict;
 		
@@ -68,7 +69,7 @@ namespace TaskManager
 			_taskTitleTextBox.Size = new Size(240,40);
 			_taskTitleTextBox.BackColor = Color.White;
 			_taskTitleTextBox.TextAlign = HorizontalAlignment.Center;
-			_taskTitleTextBox.Font = new Font("Arial", 12);
+			_taskTitleTextBox.Font = new Font("Arial",12);
 			this.Controls.Add(_taskTitleTextBox);
 			
 			_taskNotesTextBox = new TextBox();
@@ -76,7 +77,7 @@ namespace TaskManager
 			_taskNotesTextBox.Size = new Size(240,300);
 			_taskNotesTextBox.BackColor = Color.White;
 			_taskNotesTextBox.Multiline = true;
-			_taskNotesTextBox.Font = new Font("Arial", 12);
+			_taskNotesTextBox.Font = new Font("Arial",12);
 			this.Controls.Add(_taskNotesTextBox);
 			
 			_taskUpdatedDateLabel = new DateTimeLabel("Updated:");
@@ -89,20 +90,30 @@ namespace TaskManager
 			this.Controls.Add(_taskDueDateLabel);
 
 			_taskCurrentDateLabel = new DateTimeLabel("Now:");
-			_taskCurrentDateLabel.Location = new Point(243, 475);
+			_taskCurrentDateLabel.Location = new Point(243,475);
 			_taskCurrentDateLabel.Enabled = false;
 			this.Controls.Add(_taskCurrentDateLabel);
-			
-			_taskCompletedLabel = new CompletedLabel("Completed:");
-			_taskCompletedLabel.Location = new Point(243,505);
-			_taskCompletedLabel.checkBoxClick += new EventHandler(_onTickCompletedLabel_checkBoxClick);
-			this.Controls.Add(_taskCompletedLabel);
 			
 			_timer = new Timer();
 			_timer.Interval = 1000;
 			_timer.Tick += new EventHandler(_onTimerTick);
 			_timer.Start();
 			
+			_taskCompletedLabel = new CompletedLabel("Completed:");
+			_taskCompletedLabel.Location = new Point(243,505);
+			_taskCompletedLabel.checkBoxClick += new EventHandler(_onTickCompletedLabel_checkBoxClick);
+			this.Controls.Add(_taskCompletedLabel);
+			
+			_taskSaveChangesButton = new Button();
+			_taskSaveChangesButton.Font = new Font("Arial", 14);
+			_taskSaveChangesButton.Text = "Save Task Changes";		
+			_taskSaveChangesButton.Location = new Point(243,540);
+			_taskSaveChangesButton.Size = new Size(240,35);
+			_taskSaveChangesButton.Click += new EventHandler(_onSaveTaskChangesButtonClick);
+			this.Controls.Add(_taskSaveChangesButton);
+			
+			_enableTaskControls(false);
+				
 			_toolbarButtonsDict = new Dictionary<string,CustomToolbarButton>();
 			
 			
@@ -144,6 +155,46 @@ namespace TaskManager
 			}
 		}
 		
+		private void _enableTaskControls(bool val)
+		{
+			if (val == true)
+			{
+				_taskTitleTextBox.Enabled = true;
+				_taskNotesTextBox.Enabled = true;
+				_taskDueDateLabel.Enabled = true;
+				_taskCompletedLabel.Enabled = true;
+				_taskSaveChangesButton.Enabled = true;
+			}
+			else
+			{
+				_taskTitleTextBox.Enabled = false;
+				_taskNotesTextBox.Enabled = false;
+				_taskDueDateLabel.Enabled = false;
+				_taskCompletedLabel.Enabled = false;
+				_taskSaveChangesButton.Enabled = false;
+			}
+		}
+		
+		private void _enableTaskListControls(bool val)
+		{
+			if (val == true)
+			{
+				_taskTitleTextBox.Enabled = true;
+				_taskNotesTextBox.Enabled = false;
+				_taskDueDateLabel.Enabled = false;
+				_taskCompletedLabel.Enabled = false;
+				_taskSaveChangesButton.Enabled = false;
+			}
+			else
+			{
+				_taskTitleTextBox.Enabled = false;
+				_taskNotesTextBox.Enabled = false;
+				_taskDueDateLabel.Enabled = false;
+				_taskCompletedLabel.Enabled = false;
+				_taskSaveChangesButton.Enabled = false;
+			}
+		}
+		
 		
 		//CustomTreeView Section
 		private void _onCustomTreeNodeClick(object sender, TreeNodeMouseClickEventArgs e)
@@ -157,7 +208,6 @@ namespace TaskManager
 		
 		private void _onCustomTreeViewKeyDown(object sender, TreeViewEventArgs e)
 		{
-			
 			TreeNodeWithId clickedNode = (TreeNodeWithId)e.Node;
 			_updateTaskControls(clickedNode);
 		}
@@ -168,6 +218,9 @@ namespace TaskManager
 				
 				//selected node is Task, not TaskList
 				if ((from selectedDBTask in selectedDBTasks select selectedDBTask.id).Contains(clickedNode.id))
+				{
+					_enableTaskControls(true);
+					
 					foreach(DBTask dbTask in selectedDBTasks)
 					{
 						_taskTitleTextBox.Text = dbTask.title;
@@ -175,13 +228,25 @@ namespace TaskManager
 						_taskUpdatedDateLabel.setDate(dbTask.updated);
 						_taskDueDateLabel.setDate(dbTask.due);
 					}
-				else
-				{
-						_taskTitleTextBox.Text = "";
-						_taskNotesTextBox.Text = "";
-						_taskUpdatedDateLabel.setDate(DateTime.MaxValue);
-						_taskDueDateLabel.setDate(DateTime.MaxValue);
 				}
+				else
+					_enableTaskControls(false);
+				
+				IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists where selectedDBTaskList.id.Equals(clickedNode.id) select selectedDBTaskList;
+				//selected node is TaskList, not Task
+				if ((from selectedDBTaskList in selectedDBTaskLists select selectedDBTaskList.id).Contains(clickedNode.id))
+				{
+					_enableTaskListControls(true);
+					
+					foreach(DBTaskList dbTaskList in selectedDBTaskLists)
+					{
+						_taskTitleTextBox.Text = dbTaskList.title;
+						_taskNotesTextBox.Text = "";
+						_taskUpdatedDateLabel.setDate(dbTaskList.updated);
+						_taskDueDateLabel.setDate(DateTime.MaxValue);
+					}
+				}
+				
 		}
 		
 		
@@ -197,11 +262,50 @@ namespace TaskManager
 		}
 		
 		
+		private void _onSaveTaskChangesButtonClick(object sender, EventArgs e)
+		{
+			TreeNodeWithId selectedNodeInTreeView = (TreeNodeWithId)_customTreeView.SelectedNode;
+			
+			if (selectedNodeInTreeView != null)
+			{
+				IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks where selectedDBTask.id.Equals(selectedNodeInTreeView.id) select selectedDBTask;
+			
+				if ((from selectedDBTask in selectedDBTasks select selectedDBTask.id).Contains(selectedNodeInTreeView.id))
+				{
+					TasksService service = _authenticator.getTasksService();
+					
+					if (service != null)
+					{
+						foreach(DBTask dbTask in selectedDBTasks)
+						{
+							dbTask.title = _taskTitleTextBox.Text;
+							dbTask.notes = _taskNotesTextBox.Text;
+							dbTask.due = _taskDueDateLabel.getDate();
+							if (_taskCompletedLabel.checkBoxChecked())
+								dbTask.status = "completed";
+							else dbTask.status = "needsAction";
+							
+							_dbManager.SubmitChanges();
+							
+							//UPDATE MUST BE CALLED WHEN "SYNCHRONIZE" BUTTON PRESSED
+							Task gglTask = dbTask.toGGLTask();
+							service.Tasks.Update(gglTask, dbTask.taskListId, gglTask.Id).Fetch();                                                                             task.Id);
+							Debug.WriteLine("update request started");
+						}
+					}
+				}
+			}
+		}
+		
+		
 		//ToolBar Buttons Section
 		void onAddTaskButtonClick(object sender, EventArgs e)
 		{
-		
+			
 		}
+		
+		
+		
 		
 		void onDBButtonClick(object sender, EventArgs e)
 		{
@@ -212,7 +316,7 @@ namespace TaskManager
 			{
 				Debug.WriteLine("selectedDBTask = " + dbTask.title);
 			}
-
+			
 			_customTreeView.reloadData(selectedDBTaskLists, selectedDBTasks);
 		}
 		
@@ -241,6 +345,7 @@ namespace TaskManager
 				foreach(TaskList item in service.Tasklists.List().Fetch().Items)
 				{
 					//
+					
 					DBTaskList dbTaskList = new DBTaskList(item);
 					if (!_dbManager.tasklists.Contains(dbTaskList))
 					{
