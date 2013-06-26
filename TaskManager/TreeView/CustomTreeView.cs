@@ -73,6 +73,32 @@ namespace TaskManager
 			}
 		}
 		
+		public bool isTaskNode(TreeNodeWithId node)
+		{
+			if (node != null)
+			{		
+				if ((from dbTask in _dbTasks where dbTask.id == node.id select dbTask.id).Contains(node.id))
+			    	return true;
+				else
+					return false;
+			}
+			else
+				return false;
+		}
+		
+		public bool isTaskListNode(TreeNodeWithId node)
+		{
+			if (node != null)
+			{		
+				if ((from dbTaskList in _dbTaskLists where dbTaskList.id == node.id select dbTaskList.id).Contains(node.id))
+			    	return true;
+				else
+					return false;
+			}
+			else
+				return false;
+		}
+		
 		
 		private void _ItemDrag(object sender, ItemDragEventArgs e)
 		{
@@ -106,7 +132,5 @@ namespace TaskManager
 				draggedNode.Remove();
 			}
 		}
-		
-	
 	}
 }
