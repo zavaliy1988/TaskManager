@@ -18,6 +18,30 @@ using System.Diagnostics;
 
 namespace TaskManager
 {
+	
+	
+	public class CustomTreeViewDropEventArgs : EventArgs
+	{
+		private string _nodeId;
+		private string _parentNodeId;
+				
+        public CustomTreeViewDropEventArgs(string nodeId, string parentNodeId)
+        {
+        	_nodeId = nodeId;
+            _parentNodeId = parentNodeId;
+        }
+
+        public string nodeId 
+        {
+        	get { return _nodeId; }
+        }
+        
+        public string parentNodeId
+        {
+        	get { return _parentNodeId; }
+        }
+	}
+	
 	/// <summary>
 	/// Description of CustomTreeView.
 	/// </summary>
@@ -26,6 +50,8 @@ namespace TaskManager
 		IList<DBTaskList> _dbTaskLists;
 		IList<DBTask> _dbTasks;
 		TreeNodeWithId draggedNode;
+		public delegate void NodeDropHandler(object sender, CustomTreeViewDropEventArgs e);
+		public event NodeDropHandler NodeDrop;
 		
 		public CustomTreeView()
 		{
@@ -68,7 +94,6 @@ namespace TaskManager
 					if ((dbTask.due > DateTime.Now) && (dbTask.status.Equals("needsAction"))) newNode.BackColor = Color.Yellow;
 					if ((dbTask.due > DateTime.Now) && (dbTask.status.Equals("completed"))) newNode.BackColor = Color.LightGreen;
 					this.Nodes[i].Nodes.Add(newNode);
-					
 				}
 			}
 		}
@@ -117,19 +142,20 @@ namespace TaskManager
 			Point pt = ((CustomTreeView)sender).PointToClient(new Point(e.X, e.Y));
 			TreeNodeWithId destinationNode = (TreeNodeWithId)((CustomTreeView)sender).GetNodeAt(pt);
 			
+			if (destinationNode != null) Debug.WriteLine("Node is not null");
+			
 			if ((from dbTask in _dbTasks select dbTask.id).Contains(draggedNode.id))
 			{
-				destinationNode.Parent.Nodes.Add(new TreeNodeWithId(draggedNode.id, draggedNode.Text));
-				destinationNode.Expand();
-			    
-				IEnumerable<DBTask> dbTasksDragged = from dbTask in _dbTasks where draggedNode.id == dbTask.id select dbTask;
-				foreach(DBTask dbTaskDragged in dbTasksDragged)
-				{
-					dbTaskDragged.taskListId = ((TreeNodeWithId)destinationNode.Parent).id;
-					//DBMANAGER MUST BE CALLED TO SAVE CHANGES
-				}
-			
-				draggedNode.Remove();
+				Debug.WriteLine("Node can be added");
+				
+				if ((from dbTaskList in _dbTaskLists select dbTaskList.id).Contains(destinationNode.id))
+				    {
+						destinationNode.Nodes.Add(new TreeNodeWithId(draggedNode.id, draggedNode.Text));
+						destinationNode.Expand();
+				
+						NodeDrop(this, new CustomTreeViewDropEventArgs(draggedNode.id, destinationNode.id));
+						draggedNode.Remove();
+				    }
 			}
 		}
 	}

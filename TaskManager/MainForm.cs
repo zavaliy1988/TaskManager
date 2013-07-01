@@ -61,6 +61,7 @@ namespace TaskManager
 			_customTreeView.Location = new Point(5,60);
 			_customTreeView.Size = new Size(230,440);
 			_customTreeView.NodeMouseClick += new TreeNodeMouseClickEventHandler(_onCustomTreeNodeClick);
+			_customTreeView.NodeDrop += new CustomTreeView.NodeDropHandler(_onCustomTreeNodeDrop);
 			_customTreeView.AfterSelect += new TreeViewEventHandler(_onCustomTreeViewAfterSelect);
 			_customTreeView.KeyUp += new KeyEventHandler(_onCustomTreeViewKeyUp);
 			this.Controls.Add(_customTreeView);
@@ -125,7 +126,7 @@ namespace TaskManager
 				this.Controls.Add(toolbarButton);
 				
 				if (i == 0) _toolbarButtonsDict.Add("addtasklist",toolbarButton);
-				if (i == 1) _toolbarButtonsDict.Add("edittask",toolbarButton);
+				if (i == 1) _toolbarButtonsDict.Add("addtask",toolbarButton);
 				if (i == 2) _toolbarButtonsDict.Add("removetask",toolbarButton);
 				if (i == 3) _toolbarButtonsDict.Add("addtask1",toolbarButton);
 				if (i == 4) _toolbarButtonsDict.Add("synchronize",toolbarButton);
@@ -134,12 +135,15 @@ namespace TaskManager
 			Debug.WriteLine(AppDomain.CurrentDomain.BaseDirectory);
 			
 			_toolbarButtonsDict["addtasklist"].BackgroundImage = Image.FromFile(AppDomain.CurrentDomain.BaseDirectory + "\\icons\\addtasklist.jpeg");
-			_toolbarButtonsDict["addtasklist"].Click += new EventHandler(onAddTaskListButtonClick);
+			_toolbarButtonsDict["addtasklist"].Click += new EventHandler(_onAddTaskListButtonClick);
+			
+			_toolbarButtonsDict["addtask"].BackgroundImage = Image.FromFile(AppDomain.CurrentDomain.BaseDirectory + "\\icons\\addtask.png");
+			_toolbarButtonsDict["addtask"].Click += new EventHandler(_onAddTaskButtonClick);
 			
 			_toolbarButtonsDict["synchronize"].BackgroundImage = Image.FromFile(AppDomain.CurrentDomain.BaseDirectory + "\\icons\\synchronize.png");
-			_toolbarButtonsDict["synchronize"].Click += new EventHandler(onSynchronizeButtonClick);
+			_toolbarButtonsDict["synchronize"].Click += new EventHandler(_onSynchronizeButtonClick);
 			
-			_toolbarButtonsDict["addtask1"].Click += new EventHandler(onDBButtonClick);
+			_toolbarButtonsDict["addtask1"].Click += new EventHandler(_onDBButtonClick);
 			
 			_authenticator = new Authenticator("167957637234.apps.googleusercontent.com",
 			                                  "rNm8WIonWEdVJKzWf3N76RaW",
@@ -214,6 +218,16 @@ namespace TaskManager
 			{
 				_reloadTaskControlsData(clickedNode);
 			}
+		}
+		
+		private void _onCustomTreeNodeDrop(object sender, CustomTreeViewDropEventArgs e)
+		{
+			IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks where selectedDBTask.id.Equals(e.nodeId) select selectedDBTask;
+			foreach(DBTask dbTask in selectedDBTasks)
+			{
+				dbTask.taskListId = e.parentNodeId;
+			}			
+			_dbManager.SubmitChanges();
 		}
 		
 		private void _onCustomTreeViewAfterSelect(object sender, TreeViewEventArgs e)
@@ -351,15 +365,33 @@ namespace TaskManager
 		
 		
 		//ToolBar Buttons Section
-		void onAddTaskListButtonClick(object sender, EventArgs e)
+		void _onAddTaskListButtonClick(object sender, EventArgs e)
 		{
-			
+			TasksService service = _authenticator.getTasksService();
+			if (service != null)
+			{
+				//INSERT MUST BE CALLED WHEN "SYNCHRONIZE" BUTTON PRESSED
+				TaskList taskListToInsert = new TaskList();
+				taskListToInsert.Title = "New TaskList Title";
+				service.Tasklists.Insert(taskListToInsert).Fetch();
+	
+			}
+		}
+		
+		void _onAddTaskButtonClick(object sender, EventArgs e)
+		{
+			TasksService service = _authenticator.getTasksService();
+			if (service != null)
+			{
+				//INSERT MUST BE CALLED WHEN "SYNCHRONIZE" BUTTON PRESSED
+				//Task taskToInsert = new Task();
+				//taskToInsert.Title = "New Task Title 2";
+				//service.Tasks.Insert(taskToInsert, _dbManager.tasklists.ToList()[0].id).Fetch();
+			}
 		}
 		
 		
-		
-		
-		void onDBButtonClick(object sender, EventArgs e)
+		void _onDBButtonClick(object sender, EventArgs e)
 		{
 			//Read from DB
 			IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList;
@@ -372,7 +404,7 @@ namespace TaskManager
 			_customTreeView.reloadData(selectedDBTaskLists, selectedDBTasks);
 		}
 		
-		void onSynchronizeButtonClick(object sender, EventArgs e)
+		void _onSynchronizeButtonClick(object sender, EventArgs e)
 		{
 			TasksService service = _authenticator.getTasksService();
 			
