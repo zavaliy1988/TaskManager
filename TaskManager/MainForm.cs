@@ -152,7 +152,7 @@ namespace TaskManager
 			                                  "");
 			
 			//Create DB
-			_dbManager = new DBManager("C:\\dbtaskmanager2.mdf");
+			_dbManager = new DBManager("C:\\dbtaskmanager3.mdf");
 			if (!_dbManager.DatabaseExists())
 			{
 				_dbManager.CreateDatabase();
@@ -335,7 +335,8 @@ namespace TaskManager
 				IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists where selectedDBTaskList.id.Equals(selectedNodeInTreeView.id) select selectedDBTaskList;
 				foreach(DBTaskList dbTaskList in selectedDBTaskLists)
 				{
-					dbTaskList.title = _taskTitleTextBox.Text;        
+					dbTaskList.title = _taskTitleTextBox.Text;  
+					dbTaskList.updated = DateTime.Now;
 				}
 			}
 						
@@ -371,9 +372,19 @@ namespace TaskManager
 			if (service != null)
 			{
 				//INSERT MUST BE CALLED WHEN "SYNCHRONIZE" BUTTON PRESSED
-				TaskList taskListToInsert = new TaskList();
-				taskListToInsert.Title = "New TaskList Title";
-				service.Tasklists.Insert(taskListToInsert).Fetch();
+				TaskList gglTaskListToInsert = new TaskList();
+				gglTaskListToInsert.Id = "randomTaskListId1";
+				gglTaskListToInsert.Title = "This is new TaskList";
+				
+				
+				DBTaskList dbTaskListToInsert = new DBTaskList(gglTaskListToInsert);
+				_dbManager.tasklists.InsertOnSubmit(dbTaskListToInsert);
+				_dbManager.SubmitChanges();
+				
+				IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList;
+				IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks select selectedDBTask;
+				_customTreeView.reloadData(selectedDBTaskLists, selectedDBTasks);
+				//service.Tasklists.Insert(taskListToInsert).Fetch();
 	
 			}
 		}
@@ -410,33 +421,18 @@ namespace TaskManager
 			
 			if (service != null)
 			{
+				IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList;
+				IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks select selectedDBTask;
 				
-				
-				//Write to DB
-				foreach(DBTaskList dbTaskList in (from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList))
+				foreach(TaskList gglTaskList in service.Tasklists.List().Fetch().Items)
 				{
-					_dbManager.tasklists.DeleteOnSubmit(dbTaskList);
-					_dbManager.SubmitChanges();
-				}
-				foreach(DBTask dbTask in (from selectedDBTask in _dbManager.tasks select selectedDBTask))
-				{
-					_dbManager.tasks.DeleteOnSubmit(dbTask);
-					_dbManager.SubmitChanges();
-				}
-				_dbManager.SubmitChanges();
-				
-
-				foreach(TaskList item in service.Tasklists.List().Fetch().Items)
-				{
-					//
-					
-					DBTaskList dbTaskList = new DBTaskList(item);
+					DBTaskList dbTaskList = new DBTaskList(gglTaskList);
 					if (!_dbManager.tasklists.Contains(dbTaskList))
 					{
 						_dbManager.tasklists.InsertOnSubmit(dbTaskList);
 						_dbManager.SubmitChanges();
 						
-						foreach(Task gglTask in service.Tasks.List(dbTaskList.id).Fetch().Items)
+						foreach(Task gglTask in service.Tasks.List(gglTaskList.Id).Fetch().Items)
 						{
 							DBTask dbTask = new DBTask(gglTask, dbTaskList.id);
 							if (!_dbManager.tasks.Contains(dbTask))
@@ -446,27 +442,64 @@ namespace TaskManager
 							}
 						}
 					}
+					else
+					{
+						DBTaskList dbTaskListToCompare = (from selectedDBTaskList in _dbManager.tasklists where selectedDBTaskList.id.Equals(dbTaskList.id) select selectedDBTaskList).ToList()[0];
+						int comparisonResult = TaskManagerHelper.convertTaskListUpdatedStringToDateTime(gglTaskList.Updated).CompareTo(dbTaskListToCompare.updated);
+						
+						Debug.WriteLine("dbManager contains TaskList with title = " + dbTaskListToCompare.title);
+						Debug.WriteLine("comparisonResult = " + comparisonResult.ToString());
+						
+						//gglTaskList must be updated
+						if (comparisonResult < 0)
+						{
+							gglTaskList.Title = dbTaskListToCompare.title;
+							gglTaskList.Updated = TaskManagerHelper.convertTaskListDateTimeToUpdatedString(dbTaskListToCompare.updated);
+							
+							Debug.WriteLine("gglTaskListToUpdate.title = " + gglTaskList.Title);
+							try
+							{
+								Debug.WriteLine("Trying send TaskList to google");
+								service.Tasklists.Update(gglTaskList,gglTaskList.Id).Fetch();
+								dbTaskListToCompare.mustBeSendToGoogle = false;
+							}
+							catch (Exception ex)
+							{
+							
+							}
+						}
+						//DBTaskList must be updated
+						else if (comparisonResult > 0)
+						{
+							dbTaskListToCompare.selfLink = gglTaskList.SelfLink;
+							dbTaskListToCompare.title = gglTaskList.Title;
+							dbTaskListToCompare.updated = TaskManagerHelper.convertTaskListUpdatedStringToDateTime(gglTaskList.Updated);
+							dbTaskListToCompare.mustBeSendToGoogle = true;
+							_dbManager.SubmitChanges();
+						}
+							
+					}
 				}
 				
 				
 				
 				//MDE2ODMxMzk1MTAzNzcwMTExMDk6MzU1MTU2NDgwOjA
 				//	MDE2ODMxMzk1MTAzNzcwMTExMDk6OTUxOTcxMjE6MA
-				IEnumerable<Task> tasks = service.Tasks.List("MDE2ODMxMzk1MTAzNzcwMTExMDk6MzU1MTU2NDgwOjA").Fetch().Items;
-				foreach(Task task in tasks)
-				{
-					Debug.WriteLine("task.Id = " + task.Id);
-					Debug.WriteLine("task.Title = " + task.Title);
-					Debug.WriteLine("task.Position = " + task.Position);
-					Debug.WriteLine("task.Parent = " + task.Parent);
-					Debug.WriteLine("task.Status = " + task.Status);
-					Debug.WriteLine("task.SelfLink = " + task.SelfLink);
-					Debug.WriteLine("task.Completed = " + task.Completed);
-					Debug.WriteLine("task.Deleted = " + task.Deleted);
-					Debug.WriteLine("task.Due = " + task.Due);
-					Debug.WriteLine("task.Updated = " + task.Updated);
-					Debug.WriteLine("task.Notes = " + task.Notes);
-				}
+//				IEnumerable<Task> tasks = service.Tasks.List("MDE2ODMxMzk1MTAzNzcwMTExMDk6MzU1MTU2NDgwOjA").Fetch().Items;
+//				foreach(Task task in tasks)
+//				{
+//					Debug.WriteLine("task.Id = " + task.Id);
+//					Debug.WriteLine("task.Title = " + task.Title);
+//					Debug.WriteLine("task.Position = " + task.Position);
+//					Debug.WriteLine("task.Parent = " + task.Parent);
+//					Debug.WriteLine("task.Status = " + task.Status);
+//					Debug.WriteLine("task.SelfLink = " + task.SelfLink);
+//					Debug.WriteLine("task.Completed = " + task.Completed);
+//					Debug.WriteLine("task.Deleted = " + task.Deleted);
+//					Debug.WriteLine("task.Due = " + task.Due);
+//					Debug.WriteLine("task.Updated = " + task.Updated);
+//					Debug.WriteLine("task.Notes = " + task.Notes);
+//				}
 
 			}
 		}

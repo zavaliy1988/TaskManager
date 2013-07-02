@@ -32,7 +32,7 @@ namespace TaskManager
 				string [] dateTimeStringParts = updatedDateWithSpaceSeparators.ToString().Split(new char [] {' '});
 				int [] dateTimeIntParts = new int[dateTimeStringParts.Length];
 				
-				Debug.WriteLine("Updated Date before convert = " + gglTasklistUpdatedString);
+				//Debug.WriteLine("Updated Date before convert = " + gglTasklistUpdatedString);
 				for(int i = 0; i < dateTimeStringParts.Length; i++)
 				{
 					dateTimeIntParts[i] = Int32.Parse(dateTimeStringParts[i]);
@@ -58,7 +58,6 @@ namespace TaskManager
 		
 		public static string convertTaskDateTimeToUpdatedString(DateTime dbTaskDateTime)
 		{
-			Debug.WriteLine("Converted DateTime = " + convertTaskListDateTimeToUpdatedString(dbTaskDateTime));
 			return convertTaskListDateTimeToUpdatedString(dbTaskDateTime);
 		}
 		

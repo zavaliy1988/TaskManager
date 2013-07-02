@@ -29,6 +29,8 @@ namespace TaskManager
 			this.selfLink = gglTasklist.SelfLink;
 			
 			this.updated = TaskManagerHelper.convertTaskListUpdatedStringToDateTime(gglTasklist.Updated);
+			
+			this.mustBeSendToGoogle = false;
 		}
 		
 		public DBTaskList()
@@ -44,5 +46,7 @@ namespace TaskManager
     	public string selfLink;
     	[Column]
     	public DateTime updated;
+    	[Column]
+    	public bool mustBeSendToGoogle;
 	}
 }

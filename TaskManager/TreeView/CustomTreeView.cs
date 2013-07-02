@@ -88,7 +88,7 @@ namespace TaskManager
 				{
 					TreeNodeWithId newNode = new TreeNodeWithId(dbTask.id, dbTask.title);
 					
-					Debug.WriteLine("dbTask.due = " + dbTask.due.ToString());
+					//Debug.WriteLine("dbTask.due = " + dbTask.due.ToString());
 					if ((dbTask.due <= DateTime.Now) && (dbTask.status.Equals("needsAction"))) newNode.BackColor = Color.Red;
 					if ((dbTask.due <= DateTime.Now) && (dbTask.status.Equals("completed"))) newNode.BackColor = Color.Gray;
 					if ((dbTask.due > DateTime.Now) && (dbTask.status.Equals("needsAction"))) newNode.BackColor = Color.Yellow;
