@@ -30,7 +30,7 @@ namespace TaskManager
 			
 			this.updated = TaskManagerHelper.convertTaskListUpdatedStringToDateTime(gglTasklist.Updated);
 			
-			this.mustBeSendToGoogle = false;
+			this.mustBeCreatedOnGoogle = false;
 		}
 		
 		public DBTaskList()
@@ -47,6 +47,17 @@ namespace TaskManager
     	[Column]
     	public DateTime updated;
     	[Column]
-    	public bool mustBeSendToGoogle;
+    	public bool mustBeCreatedOnGoogle;
+    	
+    	public TaskList toGGLTask()
+    	{
+    		TaskList gglTaskList = new TaskList();
+    		gglTaskList.Id = this.id;
+    		gglTaskList.Title = this.title;
+    		gglTaskList.SelfLink = gglTaskList.SelfLink;
+    		gglTaskList.Updated = TaskManagerHelper.convertTaskListDateTimeToUpdatedString(this.updated);
+    		
+    		return gglTaskList;
+    	}
 	}
 }

@@ -52,8 +52,8 @@ namespace TaskManager
 		//2013-06-22T00:28:02.000Z
 		public static string convertTaskListDateTimeToUpdatedString(DateTime dbTasklistDateTime)
 		{
-			return dbTasklistDateTime.Year.ToString() + "-" + dbTasklistDateTime.Month.ToString() + "-" + dbTasklistDateTime.Day.ToString() + "T" +
-			           dbTasklistDateTime.Hour.ToString() + ":" + dbTasklistDateTime.Minute.ToString() + ":" + dbTasklistDateTime.Second.ToString() + ".000Z";
+			return dbTasklistDateTime.Year.ToString().PadLeft(4,'0') + "-" + dbTasklistDateTime.Month.ToString().PadLeft(2,'0') + "-" + dbTasklistDateTime.Day.ToString().PadLeft(2,'0') + "T" +
+				dbTasklistDateTime.Hour.ToString().PadLeft(2,'0') + ":" + dbTasklistDateTime.Minute.ToString().PadLeft(2,'0') + ":" + dbTasklistDateTime.Second.ToString().PadLeft(2,'0') + ".000Z";
 		}
 		
 		public static string convertTaskDateTimeToUpdatedString(DateTime dbTaskDateTime)
@@ -61,6 +61,31 @@ namespace TaskManager
 			return convertTaskListDateTimeToUpdatedString(dbTaskDateTime);
 		}
 		
+		public static string createRandomString(int size)
+    	{
+			Random random = new Random();
+       	 	StringBuilder builder = new StringBuilder();
+        	char ch;
+        	for (int i = 0; i < size; i++)
+        	{
+           		ch = Convert.ToChar(Convert.ToInt32(Math.Floor(26 * random.NextDouble() + 65)));                 
+            	builder.Append(ch);
+        	}
+     		
+        	return builder.ToString();
+    	}
+		
+		public static string createRandomTaskListId()
+		{
+			//TaskList has length of id = 19
+			return createRandomString(19);
+		}
+		
+		public static string createRandomTaskId()
+		{
+			//Task has length of id = 43
+			return createRandomString(43);
+		}
 		
 	}
 }

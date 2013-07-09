@@ -60,7 +60,7 @@ namespace TaskManager
 		
 		private void _onDateTimePickerValueChange(object sender, EventArgs e)
 		{
-			//Debug.WriteLine("Date changed");
+			_settedDateTime = _dateTimePicker.Value;
 		}
 		
 		protected override void OnEnabledChanged(EventArgs e)

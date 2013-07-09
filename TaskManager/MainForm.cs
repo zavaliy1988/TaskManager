@@ -14,13 +14,13 @@ using System.IO;
 using System.Net;
 
 using System.Text;
+using System.ComponentModel;
 
 using Google.Apis.Tasks.v1;
 using Google.Apis.Tasks.v1.Data;
 
 using System.Diagnostics;
 using System.Linq;
-
 
 
 
@@ -44,8 +44,7 @@ namespace TaskManager
 		Button _taskSaveChangesButton;
 		
 		Dictionary<string,CustomToolbarButton> _toolbarButtonsDict;
-		
-		
+			
 		Authenticator _authenticator;
 		
 		DBManager _dbManager;
@@ -152,7 +151,7 @@ namespace TaskManager
 			                                  "");
 			
 			//Create DB
-			_dbManager = new DBManager("C:\\dbtaskmanager3.mdf");
+			_dbManager = new DBManager("C:\\dbtaskmanager5.mdf");
 			if (!_dbManager.DatabaseExists())
 			{
 				_dbManager.CreateDatabase();
@@ -351,58 +350,76 @@ namespace TaskManager
 						dbTask.due = _taskDueDateLabel.getDate();
 						if (_taskCompletedLabel.checkBoxChecked())
 							dbTask.status = "completed";
-						else dbTask.status = "needsAction";
-							
+						else 
+							dbTask.status = "needsAction";
+						
+						_dbManager.SubmitChanges();
 						//UPDATE MUST BE CALLED WHEN "SYNCHRONIZE" BUTTON PRESSED
 						//Task gglTask = dbTask.toGGLTask();
 						//	service.Tasks.Update(gglTask, dbTask.taskListId, gglTask.Id).Fetch();                      
+						Debug.WriteLine("_LabelDate = " + _taskDueDateLabel.getDate());
+						Debug.WriteLine("DB date = " + dbTask.due);
 						Debug.WriteLine("update request started");
 					}
 			}
 			
-			_dbManager.SubmitChanges();
+			//_dbManager.SubmitChanges();
 			reloadCustomTreeViewData();
 		}
 		
 		
 		//ToolBar Buttons Section
-		void _onAddTaskListButtonClick(object sender, EventArgs e)
+		private void _onAddTaskListButtonClick(object sender, EventArgs e)
 		{
-			TasksService service = _authenticator.getTasksService();
-			if (service != null)
+			TaskList gglTaskListToInsert = new TaskList();
+			
+			while(true)
 			{
-				//INSERT MUST BE CALLED WHEN "SYNCHRONIZE" BUTTON PRESSED
-				TaskList gglTaskListToInsert = new TaskList();
-				gglTaskListToInsert.Id = "randomTaskListId1";
-				gglTaskListToInsert.Title = "This is new TaskList";
-				
-				
-				DBTaskList dbTaskListToInsert = new DBTaskList(gglTaskListToInsert);
-				_dbManager.tasklists.InsertOnSubmit(dbTaskListToInsert);
-				_dbManager.SubmitChanges();
-				
-				IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList;
-				IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks select selectedDBTask;
-				_customTreeView.reloadData(selectedDBTaskLists, selectedDBTasks);
-				//service.Tasklists.Insert(taskListToInsert).Fetch();
-	
+				gglTaskListToInsert.Id = TaskManagerHelper.createRandomTaskListId();
+				if (!(from dbTaskList in _dbManager.tasklists select dbTaskList.id).Contains(gglTaskListToInsert.Id)) break;
 			}
+			gglTaskListToInsert.Title = "This is new TaskList";
+			
+			DBTaskList dbTaskListToInsert = new DBTaskList(gglTaskListToInsert);
+			dbTaskListToInsert.mustBeCreatedOnGoogle = true;
+			dbTaskListToInsert.updated = DateTime.Now;
+			
+			_dbManager.tasklists.InsertOnSubmit(dbTaskListToInsert);
+			_dbManager.SubmitChanges();
+			
+			IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList;
+			IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks select selectedDBTask;
+			_customTreeView.reloadData(selectedDBTaskLists, selectedDBTasks);
 		}
 		
-		void _onAddTaskButtonClick(object sender, EventArgs e)
+		private void _onAddTaskButtonClick(object sender, EventArgs e)
 		{
-			TasksService service = _authenticator.getTasksService();
-			if (service != null)
+			Task gglTaskToInsert = new Task();
+			
+			while(true)
 			{
-				//INSERT MUST BE CALLED WHEN "SYNCHRONIZE" BUTTON PRESSED
-				//Task taskToInsert = new Task();
-				//taskToInsert.Title = "New Task Title 2";
-				//service.Tasks.Insert(taskToInsert, _dbManager.tasklists.ToList()[0].id).Fetch();
+				gglTaskToInsert.Id = TaskManagerHelper.createRandomTaskId();
+				if (!(from dbTask in _dbManager.tasks select dbTask.id).Contains(gglTaskToInsert.Id)) break;
 			}
+			gglTaskToInsert.Title = "This is new Task!";
+			
+			DBTaskList parentTaskList = (from selectedDBTask in _dbManager.tasklists select selectedDBTask).ToList()[0];				
+			DBTask dbTaskToInsert = new DBTask(gglTaskToInsert,parentTaskList.id);
+			dbTaskToInsert.status = "needsAction";
+			dbTaskToInsert.due = DateTime.MaxValue;
+			dbTaskToInsert.updated = DateTime.Now;
+			dbTaskToInsert.mustBeCreatedOnGoogle = true;
+			
+			_dbManager.tasks.InsertOnSubmit(dbTaskToInsert);
+			_dbManager.SubmitChanges();
+			
+			IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList;
+			IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks select selectedDBTask;
+			_customTreeView.reloadData(selectedDBTaskLists, selectedDBTasks);
 		}
 		
 		
-		void _onDBButtonClick(object sender, EventArgs e)
+		private void _onDBButtonClick(object sender, EventArgs e)
 		{
 			//Read from DB
 			IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList;
@@ -415,76 +432,24 @@ namespace TaskManager
 			_customTreeView.reloadData(selectedDBTaskLists, selectedDBTasks);
 		}
 		
-		void _onSynchronizeButtonClick(object sender, EventArgs e)
+		private void _onSynchronizeButtonClick(object sender, EventArgs e)
 		{
 			TasksService service = _authenticator.getTasksService();
 			
 			if (service != null)
 			{
-				IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList;
-				IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks select selectedDBTask;
-				
-				foreach(TaskList gglTaskList in service.Tasklists.List().Fetch().Items)
-				{
-					DBTaskList dbTaskList = new DBTaskList(gglTaskList);
-					if (!_dbManager.tasklists.Contains(dbTaskList))
-					{
-						_dbManager.tasklists.InsertOnSubmit(dbTaskList);
-						_dbManager.SubmitChanges();
-						
-						foreach(Task gglTask in service.Tasks.List(gglTaskList.Id).Fetch().Items)
-						{
-							DBTask dbTask = new DBTask(gglTask, dbTaskList.id);
-							if (!_dbManager.tasks.Contains(dbTask))
-							{
-								_dbManager.tasks.InsertOnSubmit(dbTask);
-								_dbManager.SubmitChanges();
-							}
-						}
-					}
-					else
-					{
-						DBTaskList dbTaskListToCompare = (from selectedDBTaskList in _dbManager.tasklists where selectedDBTaskList.id.Equals(dbTaskList.id) select selectedDBTaskList).ToList()[0];
-						int comparisonResult = TaskManagerHelper.convertTaskListUpdatedStringToDateTime(gglTaskList.Updated).CompareTo(dbTaskListToCompare.updated);
-						
-						Debug.WriteLine("dbManager contains TaskList with title = " + dbTaskListToCompare.title);
-						Debug.WriteLine("comparisonResult = " + comparisonResult.ToString());
-						
-						//gglTaskList must be updated
-						if (comparisonResult < 0)
-						{
-							gglTaskList.Title = dbTaskListToCompare.title;
-							gglTaskList.Updated = TaskManagerHelper.convertTaskListDateTimeToUpdatedString(dbTaskListToCompare.updated);
-							
-							Debug.WriteLine("gglTaskListToUpdate.title = " + gglTaskList.Title);
-							try
-							{
-								Debug.WriteLine("Trying send TaskList to google");
-								service.Tasklists.Update(gglTaskList,gglTaskList.Id).Fetch();
-								dbTaskListToCompare.mustBeSendToGoogle = false;
-							}
-							catch (Exception ex)
-							{
-							
-							}
-						}
-						//DBTaskList must be updated
-						else if (comparisonResult > 0)
-						{
-							dbTaskListToCompare.selfLink = gglTaskList.SelfLink;
-							dbTaskListToCompare.title = gglTaskList.Title;
-							dbTaskListToCompare.updated = TaskManagerHelper.convertTaskListUpdatedStringToDateTime(gglTaskList.Updated);
-							dbTaskListToCompare.mustBeSendToGoogle = true;
-							_dbManager.SubmitChanges();
-						}
-							
-					}
-				}
-				
-				
-				
-				//MDE2ODMxMzk1MTAzNzcwMTExMDk6MzU1MTU2NDgwOjA
-				//	MDE2ODMxMzk1MTAzNzcwMTExMDk6OTUxOTcxMjE6MA
+				_dbManager.synchronizeAllTaskListsAndAllTasks(service);
+			}
+		}
+		
+
+		
+	
+		
+		
+		
+
+		
 //				IEnumerable<Task> tasks = service.Tasks.List("MDE2ODMxMzk1MTAzNzcwMTExMDk6MzU1MTU2NDgwOjA").Fetch().Items;
 //				foreach(Task task in tasks)
 //				{
@@ -500,16 +465,6 @@ namespace TaskManager
 //					Debug.WriteLine("task.Updated = " + task.Updated);
 //					Debug.WriteLine("task.Notes = " + task.Notes);
 //				}
-
-			}
-		}
-		
-		
-		
-		
-		
-		
-		
 		
 	}
 }

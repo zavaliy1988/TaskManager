@@ -35,6 +35,8 @@ namespace TaskManager
 			this.due = TaskManagerHelper.convertTaskUpdatedStringToDateTime(gglTask.Due);
 			this.completed = gglTask.Completed;
 			this.deleted = gglTask.Deleted;
+			
+			this.mustBeCreatedOnGoogle = false;
 		}
 		
 		public DBTask()
@@ -67,7 +69,8 @@ namespace TaskManager
     	public string completed;
     	[Column]
     	public Nullable<bool> deleted;
-    	
+    	[Column]
+    	public bool mustBeCreatedOnGoogle;
     	
     	public Task toGGLTask()
 		{
