@@ -6,6 +6,9 @@
  * 
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
+ 
+using System.Windows.Forms;
+
 namespace TaskManager
 {
 	partial class MainForm
@@ -40,10 +43,12 @@ namespace TaskManager
 			// MainForm
 			// 
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+			this.FormBorderStyle = FormBorderStyle.Fixed3D;
 			this.Text = "TaskManager";
 			this.Name = "MainForm";
 			
-			this.Size = new System.Drawing.Size(700,620);
+			this.MaximizeBox = false;
+			this.Size = new System.Drawing.Size(500,620);
 		}
 	}
 }

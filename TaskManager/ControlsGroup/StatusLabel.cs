@@ -17,13 +17,13 @@ namespace TaskManager
 	/// <summary>
 	/// Description of CompletedLabel.
 	/// </summary>
-	public class CompletedLabel : Label
+	public class StatusLabel : Label
 	{
 		Label _titleLabel;
 		CheckBox _checkBox;
 		public event EventHandler checkBoxClick;
 		
-		public CompletedLabel(string titleLabelText)
+		public StatusLabel(string titleLabelText)
 		{
 			this.Size = new Size(245,25);
 						
@@ -43,6 +43,11 @@ namespace TaskManager
 		public bool checkBoxChecked()
 		{
 			return _checkBox.Checked;
+		}
+		
+		public void setChecked(bool val)
+		{
+			_checkBox.Checked = val;
 		}
 		
 		private void _onCheckBoxClick(object sender, EventArgs e)

@@ -53,7 +53,7 @@ namespace TaskManager
 //			{
 //				Debug.WriteLine("b = " + b[i].Name);
 //				b[i].InnerText = "14921988";
-//				//b[i].OuterText = "DDD";
+//				
 //			}
 //			
 //			System.Windows.Forms.HtmlElementCollection n = webBrowser.Document.All.GetElementsByName("Email");

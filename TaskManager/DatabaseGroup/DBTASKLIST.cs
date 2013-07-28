@@ -31,6 +31,8 @@ namespace TaskManager
 			this.updated = TaskManagerHelper.convertTaskListUpdatedStringToDateTime(gglTasklist.Updated);
 			
 			this.mustBeCreatedOnGoogle = false;
+			this.mustBeDeletedOnGoogle = false;
+			this.wasSynchronized = true;
 		}
 		
 		public DBTaskList()
@@ -48,6 +50,10 @@ namespace TaskManager
     	public DateTime updated;
     	[Column]
     	public bool mustBeCreatedOnGoogle;
+       	[Column]
+    	public bool mustBeDeletedOnGoogle;
+    	[Column]
+    	public bool wasSynchronized;
     	
     	public TaskList toGGLTask()
     	{

@@ -49,7 +49,9 @@ namespace TaskManager
 	{
 		IList<DBTaskList> _dbTaskLists;
 		IList<DBTask> _dbTasks;
-		TreeNodeWithId draggedNode;
+		TreeNodeWithId _draggedNode;
+		string _selectedNodeIdBeforeReloadData;
+		
 		public delegate void NodeDropHandler(object sender, CustomTreeViewDropEventArgs e);
 		public event NodeDropHandler NodeDrop;
 		
@@ -78,6 +80,12 @@ namespace TaskManager
 				_dbTasks.Add(dbTask);
 			}
 		
+			
+			if (this.SelectedNode != null)
+			{
+				_selectedNodeIdBeforeReloadData = ((TreeNodeWithId)this.SelectedNode).id;
+			}
+			
 			this.Nodes.Clear();
 			for(int i = 0; i < _dbTaskLists.Count; i++)
 			{
@@ -96,6 +104,37 @@ namespace TaskManager
 					this.Nodes[i].Nodes.Add(newNode);
 				}
 			}
+			
+			//restore selectedNode
+			if (_selectedNodeIdBeforeReloadData != null)
+			{
+				bool selectedNodeFinded = false;
+				
+				for(int i = 0; i < this.Nodes.Count; i++)
+				{	
+					TreeNodeWithId taskListNode = (TreeNodeWithId)this.Nodes[i];
+					
+					if (_selectedNodeIdBeforeReloadData.Equals(taskListNode.id))
+					    {
+					    	this.SelectedNode = taskListNode;
+							break;
+					    }
+					
+					for(int j = 0; j < taskListNode.Nodes.Count; j++)
+					    {
+							TreeNodeWithId taskNode = (TreeNodeWithId)taskListNode.Nodes[j];
+							if (_selectedNodeIdBeforeReloadData.Equals(taskNode.id))
+					    	{
+								this.SelectedNode = taskNode;
+								selectedNodeFinded = true;
+								break;
+					    	}
+					    }
+					if (selectedNodeFinded)	break;
+				}
+			}
+			this.ExpandAll();
+			this.Focus();
 		}
 		
 		public bool isTaskNode(TreeNodeWithId node)
@@ -127,8 +166,8 @@ namespace TaskManager
 		
 		private void _ItemDrag(object sender, ItemDragEventArgs e)
 		{
-			draggedNode = (TreeNodeWithId)e.Item;
-			DoDragDrop(draggedNode, DragDropEffects.Move);
+			_draggedNode = (TreeNodeWithId)e.Item;
+			DoDragDrop(_draggedNode, DragDropEffects.Move);
 		}
 		
 		
@@ -144,18 +183,26 @@ namespace TaskManager
 			
 			if (destinationNode != null) Debug.WriteLine("Node is not null");
 			
-			if ((from dbTask in _dbTasks select dbTask.id).Contains(draggedNode.id))
+			if ((from dbTask in _dbTasks select dbTask.id).Contains(_draggedNode.id))
 			{
 				Debug.WriteLine("Node can be added");
 				
 				if ((from dbTaskList in _dbTaskLists select dbTaskList.id).Contains(destinationNode.id))
 				    {
-						destinationNode.Nodes.Add(new TreeNodeWithId(draggedNode.id, draggedNode.Text));
+						destinationNode.Nodes.Add(new TreeNodeWithId(_draggedNode.id, _draggedNode.Text));
 						destinationNode.Expand();
 				
-						NodeDrop(this, new CustomTreeViewDropEventArgs(draggedNode.id, destinationNode.id));
-						draggedNode.Remove();
+						NodeDrop(this, new CustomTreeViewDropEventArgs(_draggedNode.id, destinationNode.id));
+						_draggedNode.Remove();
 				    }
+				else
+				{
+					destinationNode.Parent.Nodes.Add(new TreeNodeWithId(_draggedNode.id, _draggedNode.Text));
+					destinationNode.Expand();
+			
+					NodeDrop(this, new CustomTreeViewDropEventArgs(_draggedNode.id, ((TreeNodeWithId)(destinationNode.Parent)).id));
+				    _draggedNode.Remove();
+				}
 			}
 		}
 	}

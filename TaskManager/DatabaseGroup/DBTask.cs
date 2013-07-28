@@ -33,10 +33,11 @@ namespace TaskManager
 			this.parent = gglTask.Parent;
 			this.status = gglTask.Status;
 			this.due = TaskManagerHelper.convertTaskUpdatedStringToDateTime(gglTask.Due);
-			this.completed = gglTask.Completed;
+			this.completed = TaskManagerHelper.convertTaskUpdatedStringToDateTime(gglTask.Completed);
 			this.deleted = gglTask.Deleted;
 			
 			this.mustBeCreatedOnGoogle = false;
+			this.wasSynchronized = true;
 		}
 		
 		public DBTask()
@@ -66,11 +67,13 @@ namespace TaskManager
     	[Column]
     	public DateTime due;
     	[Column]
-    	public string completed;
+    	public DateTime completed;
     	[Column]
     	public Nullable<bool> deleted;
     	[Column]
     	public bool mustBeCreatedOnGoogle;
+    	[Column]
+    	public bool wasSynchronized;
     	
     	public Task toGGLTask()
 		{
@@ -84,7 +87,7 @@ namespace TaskManager
     		gglTask.Parent = this.parent;
     		gglTask.Status = this.status;
     		gglTask.Due = TaskManagerHelper.convertTaskDateTimeToUpdatedString(this.due);
-    		gglTask.Completed = this.completed;
+    		gglTask.Completed = TaskManagerHelper.convertTaskDateTimeToUpdatedString(this.completed);
     		gglTask.Deleted = this.deleted;
     		
     		return gglTask;

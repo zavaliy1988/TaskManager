@@ -9,9 +9,9 @@
 using System;
 using System.Windows.Forms;
 using System.Drawing;
+
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
+using System.Threading;
 
 using System.Text;
 using System.ComponentModel;
@@ -21,8 +21,6 @@ using Google.Apis.Tasks.v1.Data;
 
 using System.Diagnostics;
 using System.Linq;
-
-
 
 namespace TaskManager
 {
@@ -38,16 +36,18 @@ namespace TaskManager
 		DateTimeLabel _taskUpdatedDateLabel;
 		DateTimeLabel _taskDueDateLabel;
 		DateTimeLabel _taskCurrentDateLabel;
-		Timer _timer;
+		System.Windows.Forms.Timer _timer;
 		
-		CompletedLabel _taskCompletedLabel;
+		StatusLabel _taskStatusLabel;
 		Button _taskSaveChangesButton;
 		
 		Dictionary<string,CustomToolbarButton> _toolbarButtonsDict;
 			
 		Authenticator _authenticator;
+		TasksService _tasksService;
 		
 		DBManager _dbManager;
+		Thread _synchronizationThread;
 		
 		public MainForm()
 		{
@@ -95,18 +95,18 @@ namespace TaskManager
 			_taskCurrentDateLabel.Enabled = false;
 			this.Controls.Add(_taskCurrentDateLabel);
 			
-			_timer = new Timer();
+			_timer = new System.Windows.Forms.Timer();
 			_timer.Interval = 1000;
 			_timer.Tick += new EventHandler(_onTimerTick);
 			_timer.Start();
 			
-			_taskCompletedLabel = new CompletedLabel("Completed:");
-			_taskCompletedLabel.Location = new Point(243,505);
-			this.Controls.Add(_taskCompletedLabel);
+			_taskStatusLabel = new StatusLabel("Completed:");
+			_taskStatusLabel.Location = new Point(243,505);
+			this.Controls.Add(_taskStatusLabel);
 			
 			_taskSaveChangesButton = new Button();
 			_taskSaveChangesButton.Font = new Font("Arial", 14);
-			_taskSaveChangesButton.Text = "Save Task Changes";		
+			_taskSaveChangesButton.Text = "Save Changes";		
 			_taskSaveChangesButton.Location = new Point(243,540);
 			_taskSaveChangesButton.Size = new Size(240,35);
 			_taskSaveChangesButton.Click += new EventHandler(_onSaveTaskChangesButtonClick);
@@ -151,7 +151,7 @@ namespace TaskManager
 			                                  "");
 			
 			//Create DB
-			_dbManager = new DBManager("C:\\dbtaskmanager5.mdf");
+			_dbManager = new DBManager("C:\\dbtaskmanager.mdf");
 			if (!_dbManager.DatabaseExists())
 			{
 				_dbManager.CreateDatabase();
@@ -168,7 +168,7 @@ namespace TaskManager
 				_taskTitleTextBox.Enabled = true;
 				_taskNotesTextBox.Enabled = false;
 				_taskDueDateLabel.Enabled = false;
-				_taskCompletedLabel.Enabled = false;
+				_taskStatusLabel.Enabled = false;
 				_taskSaveChangesButton.Enabled = true;
 			}
 			else
@@ -176,7 +176,7 @@ namespace TaskManager
 				_taskTitleTextBox.Enabled = false;
 				_taskNotesTextBox.Enabled = false;
 				_taskDueDateLabel.Enabled = false;
-				_taskCompletedLabel.Enabled = false;
+				_taskStatusLabel.Enabled = false;
 				_taskSaveChangesButton.Enabled = false;
 			}
 		}
@@ -188,7 +188,7 @@ namespace TaskManager
 				_taskTitleTextBox.Enabled = true;
 				_taskNotesTextBox.Enabled = true;
 				_taskDueDateLabel.Enabled = true;
-				_taskCompletedLabel.Enabled = true;
+				_taskStatusLabel.Enabled = true;
 				_taskSaveChangesButton.Enabled = true;
 			}
 			else
@@ -196,7 +196,7 @@ namespace TaskManager
 				_taskTitleTextBox.Enabled = false;
 				_taskNotesTextBox.Enabled = false;
 				_taskDueDateLabel.Enabled = false;
-				_taskCompletedLabel.Enabled = false;
+				_taskStatusLabel.Enabled = false;
 				_taskSaveChangesButton.Enabled = false;
 			}
 		}
@@ -225,6 +225,7 @@ namespace TaskManager
 			foreach(DBTask dbTask in selectedDBTasks)
 			{
 				dbTask.taskListId = e.parentNodeId;
+				dbTask.updated = System.TimeZoneInfo.ConvertTimeToUtc(DateTime.Now);
 			}			
 			_dbManager.SubmitChanges();
 		}
@@ -248,6 +249,10 @@ namespace TaskManager
 						_taskNotesTextBox.Text = dbTask.notes;
 						_taskUpdatedDateLabel.setDate(dbTask.updated);
 						_taskDueDateLabel.setDate(dbTask.due);
+						
+						if (dbTask.status.Equals("completed"))
+							_taskStatusLabel.setChecked(true);
+						else _taskStatusLabel.setChecked(false);
 					}
 				}
 				else
@@ -279,24 +284,17 @@ namespace TaskManager
 					IQueryable<DBTask> dbTasksToDelete = from selectedDBTask in _dbManager.tasks where selectedDBTask.taskListId.Equals(selectedNodeInTreeView.id) select selectedDBTask;
 					foreach(DBTask dbTask in dbTasksToDelete)
 					{
-						_dbManager.tasks.DeleteOnSubmit(dbTask);
-					
-						//DELETE MUST BE CALLED WHEN "SYNCHRONIZE" BUTTON PRESSED
-						//service.Tasks.Delete(dbTask.taskListId, dbTask.id).Fetch();
-						Debug.WriteLine("delete request started");
+						dbTask.deleted = true;
+						dbTask.updated = DateTime.Now;
 					}
-					_dbManager.SubmitChanges();
 					
 					IQueryable<DBTaskList> dbTaskListsToDelete = from selectedDBTaskList in _dbManager.tasklists where selectedDBTaskList.id.Equals(selectedNodeInTreeView.id) select selectedDBTaskList;
 					foreach(DBTaskList dbTaskList in dbTaskListsToDelete)
 					{
-						_dbManager.tasklists.DeleteOnSubmit(dbTaskList);
-						
-						//DELETE MUST BE CALLED WHEN "SYNCHRONIZE" BUTTON PRESSED
-						//service.Tasklists.Delete(dbTaskList.id).Fetch();
-						Debug.WriteLine("delete request started");
+						dbTaskList.mustBeDeletedOnGoogle = true;
+						dbTaskList.updated = DateTime.Now;
+						Debug.WriteLine("dbTaskList = " + dbTaskList.title + " must be deleted");
 					}
-					_dbManager.SubmitChanges();
 				}
 				
 				if (_customTreeView.isTaskNode(selectedNodeInTreeView))
@@ -304,16 +302,14 @@ namespace TaskManager
 			    	IQueryable<DBTask> dbTasksToDelete = from selectedDBTask in _dbManager.tasks where selectedDBTask.id.Equals(selectedNodeInTreeView.id) select selectedDBTask;
 					foreach(DBTask dbTask in dbTasksToDelete)
 					{
-						_dbManager.tasks.DeleteOnSubmit(dbTask);
-					
-						//DELETE MUST BE CALLED WHEN "SYNCHRONIZE" BUTTON PRESSED
-						//service.Tasks.Delete(dbTask.taskListId, dbTask.id).Fetch();
-						Debug.WriteLine("delete request started");
+						Debug.WriteLine("dbTask to del = " + dbTask.title);
+						dbTask.deleted = true;
+						dbTask.updated = DateTime.Now;
 					}
 				}
 				
 				_dbManager.SubmitChanges();
-				reloadCustomTreeViewData();
+				selectedNodeInTreeView.Remove();
 			}
 		}
 		//End of CustomTreeView Section
@@ -335,7 +331,7 @@ namespace TaskManager
 				foreach(DBTaskList dbTaskList in selectedDBTaskLists)
 				{
 					dbTaskList.title = _taskTitleTextBox.Text;  
-					dbTaskList.updated = DateTime.Now;
+					dbTaskList.updated = System.TimeZoneInfo.ConvertTimeToUtc(DateTime.Now);
 				}
 			}
 						
@@ -347,23 +343,20 @@ namespace TaskManager
 					{
 						dbTask.title = _taskTitleTextBox.Text;
 						dbTask.notes = _taskNotesTextBox.Text;
-						dbTask.due = _taskDueDateLabel.getDate();
-						if (_taskCompletedLabel.checkBoxChecked())
+						dbTask.due = System.TimeZoneInfo.ConvertTimeToUtc(_taskDueDateLabel.getDate());
+						dbTask.updated = System.TimeZoneInfo.ConvertTimeToUtc(DateTime.Now);
+							
+						if (_taskStatusLabel.checkBoxChecked())
+						{
 							dbTask.status = "completed";
-						else 
+						}
+						else
+						{
 							dbTask.status = "needsAction";
-						
+						}
 						_dbManager.SubmitChanges();
-						//UPDATE MUST BE CALLED WHEN "SYNCHRONIZE" BUTTON PRESSED
-						//Task gglTask = dbTask.toGGLTask();
-						//	service.Tasks.Update(gglTask, dbTask.taskListId, gglTask.Id).Fetch();                      
-						Debug.WriteLine("_LabelDate = " + _taskDueDateLabel.getDate());
-						Debug.WriteLine("DB date = " + dbTask.due);
-						Debug.WriteLine("update request started");
 					}
 			}
-			
-			//_dbManager.SubmitChanges();
 			reloadCustomTreeViewData();
 		}
 		
@@ -371,21 +364,7 @@ namespace TaskManager
 		//ToolBar Buttons Section
 		private void _onAddTaskListButtonClick(object sender, EventArgs e)
 		{
-			TaskList gglTaskListToInsert = new TaskList();
-			
-			while(true)
-			{
-				gglTaskListToInsert.Id = TaskManagerHelper.createRandomTaskListId();
-				if (!(from dbTaskList in _dbManager.tasklists select dbTaskList.id).Contains(gglTaskListToInsert.Id)) break;
-			}
-			gglTaskListToInsert.Title = "This is new TaskList";
-			
-			DBTaskList dbTaskListToInsert = new DBTaskList(gglTaskListToInsert);
-			dbTaskListToInsert.mustBeCreatedOnGoogle = true;
-			dbTaskListToInsert.updated = DateTime.Now;
-			
-			_dbManager.tasklists.InsertOnSubmit(dbTaskListToInsert);
-			_dbManager.SubmitChanges();
+			_dbManager.addNewDBTaskList();
 			
 			IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList;
 			IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks select selectedDBTask;
@@ -394,28 +373,23 @@ namespace TaskManager
 		
 		private void _onAddTaskButtonClick(object sender, EventArgs e)
 		{
-			Task gglTaskToInsert = new Task();
+			TreeNodeWithId selectedNode = (TreeNodeWithId)_customTreeView.SelectedNode;
 			
-			while(true)
+			if (selectedNode != null)
 			{
-				gglTaskToInsert.Id = TaskManagerHelper.createRandomTaskId();
-				if (!(from dbTask in _dbManager.tasks select dbTask.id).Contains(gglTaskToInsert.Id)) break;
+				if (_customTreeView.isTaskListNode(selectedNode))
+				{
+					_dbManager.addNewDBTask(selectedNode.id);
+				}
+				else
+				{
+					selectedNode = (TreeNodeWithId)_customTreeView.SelectedNode.Parent;
+					_dbManager.addNewDBTask(selectedNode.id);
+				}
+				IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList;
+				IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks select selectedDBTask;
+				_customTreeView.reloadData(selectedDBTaskLists, selectedDBTasks);
 			}
-			gglTaskToInsert.Title = "This is new Task!";
-			
-			DBTaskList parentTaskList = (from selectedDBTask in _dbManager.tasklists select selectedDBTask).ToList()[0];				
-			DBTask dbTaskToInsert = new DBTask(gglTaskToInsert,parentTaskList.id);
-			dbTaskToInsert.status = "needsAction";
-			dbTaskToInsert.due = DateTime.MaxValue;
-			dbTaskToInsert.updated = DateTime.Now;
-			dbTaskToInsert.mustBeCreatedOnGoogle = true;
-			
-			_dbManager.tasks.InsertOnSubmit(dbTaskToInsert);
-			_dbManager.SubmitChanges();
-			
-			IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList;
-			IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks select selectedDBTask;
-			_customTreeView.reloadData(selectedDBTaskLists, selectedDBTasks);
 		}
 		
 		
@@ -434,37 +408,28 @@ namespace TaskManager
 		
 		private void _onSynchronizeButtonClick(object sender, EventArgs e)
 		{
-			TasksService service = _authenticator.getTasksService();
+			_tasksService = _authenticator.getTasksService();
 			
-			if (service != null)
+			if (_tasksService != null)
 			{
-				_dbManager.synchronizeAllTaskListsAndAllTasks(service);
+				_toolbarButtonsDict["synchronize"].Enabled = false;
+				_synchronizationThread = new Thread(new ThreadStart(_performSynchronization));
+				_synchronizationThread.Start();
 			}
 		}
 		
-
-		
-	
-		
-		
-		
-
-		
-//				IEnumerable<Task> tasks = service.Tasks.List("MDE2ODMxMzk1MTAzNzcwMTExMDk6MzU1MTU2NDgwOjA").Fetch().Items;
-//				foreach(Task task in tasks)
-//				{
-//					Debug.WriteLine("task.Id = " + task.Id);
-//					Debug.WriteLine("task.Title = " + task.Title);
-//					Debug.WriteLine("task.Position = " + task.Position);
-//					Debug.WriteLine("task.Parent = " + task.Parent);
-//					Debug.WriteLine("task.Status = " + task.Status);
-//					Debug.WriteLine("task.SelfLink = " + task.SelfLink);
-//					Debug.WriteLine("task.Completed = " + task.Completed);
-//					Debug.WriteLine("task.Deleted = " + task.Deleted);
-//					Debug.WriteLine("task.Due = " + task.Due);
-//					Debug.WriteLine("task.Updated = " + task.Updated);
-//					Debug.WriteLine("task.Notes = " + task.Notes);
-//				}
-		
+		private void _performSynchronization()
+		{
+			_dbManager.synchronizeAllTaskListsAndAllTasks(_tasksService);
+			
+			IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList;
+		    IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks select selectedDBTask;
+			
+		    _customTreeView.Invoke(new MethodInvoker(delegate
+			                          	{
+			                          		_customTreeView.reloadData(selectedDBTaskLists, selectedDBTasks);
+			                           		_toolbarButtonsDict["synchronize"].Enabled = true;      	
+		                                }));
+		}
 	}
 }
