@@ -21,31 +21,6 @@ namespace TaskManager
 	[Table(Name = "tasks")]
 	public class DBTask
 	{
-		public DBTask(Task gglTask, string gglTaskListId)
-		{
-			this.id = gglTask.Id;
-			this.taskListId = gglTaskListId;
-			this.title = gglTask.Title;
-			this.selfLink = gglTask.SelfLink;
-			this.updated = TaskManagerHelper.convertTaskUpdatedStringToDateTime(gglTask.Updated);
-			this.notes = gglTask.Notes;
-			this.position = gglTask.Position;
-			this.parent = gglTask.Parent;
-			this.status = gglTask.Status;
-			this.due = TaskManagerHelper.convertTaskUpdatedStringToDateTime(gglTask.Due);
-			this.completed = TaskManagerHelper.convertTaskUpdatedStringToDateTime(gglTask.Completed);
-			this.deleted = gglTask.Deleted;
-			
-			this.mustBeCreatedOnGoogle = false;
-			this.wasSynchronized = true;
-		}
-		
-		public DBTask()
-		{
-			
-		}
-		
-		
 		[Column(IsPrimaryKey = true)]
 		public string id;
 		[Column]
@@ -74,7 +49,31 @@ namespace TaskManager
     	public bool mustBeCreatedOnGoogle;
     	[Column]
     	public bool wasSynchronized;
-    	
+		
+		public DBTask(Task gglTask, string gglTaskListId)
+		{
+			this.id = gglTask.Id;
+			this.taskListId = gglTaskListId;
+			this.title = gglTask.Title;
+			this.selfLink = gglTask.SelfLink;
+			this.updated = TaskManagerHelper.convertTaskUpdatedStringToDateTime(gglTask.Updated);
+			this.notes = gglTask.Notes;
+			this.position = gglTask.Position;
+			this.parent = gglTask.Parent;
+			this.status = gglTask.Status;
+			this.due = TaskManagerHelper.convertTaskUpdatedStringToDateTime(gglTask.Due);
+			this.completed = TaskManagerHelper.convertTaskUpdatedStringToDateTime(gglTask.Completed);
+			this.deleted = gglTask.Deleted;
+			
+			this.mustBeCreatedOnGoogle = false;
+			this.wasSynchronized = true;
+		}
+		
+		public DBTask()
+		{
+			
+		}
+		    	
     	public Task toGGLTask()
 		{
     		Task gglTask = new Task();

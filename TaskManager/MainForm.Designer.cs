@@ -48,7 +48,7 @@ namespace TaskManager
 			this.Name = "MainForm";
 			
 			this.MaximizeBox = false;
-			this.Size = new System.Drawing.Size(500,620);
+			this.Size = new System.Drawing.Size(499,620);
 		}
 	}
 }

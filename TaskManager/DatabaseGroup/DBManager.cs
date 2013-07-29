@@ -76,6 +76,37 @@ namespace TaskManager
 			this.SubmitChanges();
 		}
 		
+		public void removeDBTaskList(string dbTaskListId)
+		{
+			IQueryable<DBTask> dbTasksToDelete = from selectedDBTask in this.tasks where selectedDBTask.taskListId.Equals(dbTaskListId) select selectedDBTask;
+			foreach(DBTask dbTask in dbTasksToDelete)
+			{
+				dbTask.deleted = true;
+				dbTask.updated = TimeZoneInfo.ConvertTimeToUtc(DateTime.Now);
+			}
+				
+			IQueryable<DBTaskList> dbTaskListsToDelete = from selectedDBTaskList in this.tasklists where selectedDBTaskList.id.Equals(dbTaskListId) select selectedDBTaskList;
+			foreach(DBTaskList dbTaskList in dbTaskListsToDelete)
+			{
+				dbTaskList.mustBeDeletedOnGoogle = true;
+				dbTaskList.updated = DateTime.Now;
+				Debug.WriteLine("dbTaskList = " + dbTaskList.title + " must be deleted");
+			}
+			this.SubmitChanges();
+		}
+		
+		public void removeDBTask(string dbTaskId)
+		{
+			IQueryable<DBTask> dbTasksToDelete = from selectedDBTask in this.tasks where selectedDBTask.id.Equals(dbTaskId) select selectedDBTask;
+			foreach(DBTask dbTask in dbTasksToDelete)
+			{
+				Debug.WriteLine("dbTask to del = " + dbTask.title);
+				dbTask.deleted = true;
+				dbTask.updated = TimeZoneInfo.ConvertTimeToUtc(DateTime.Now);
+			}
+			this.SubmitChanges();
+		}
+		
 		public void synchronizeAllTaskListsAndAllTasks(TasksService service)
 		{
 			Debug.WriteLine("synchronize started");

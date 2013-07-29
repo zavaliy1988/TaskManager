@@ -57,8 +57,8 @@ namespace TaskManager
 			InitializeComponent();
 			
 			_customTreeView = new CustomTreeView();
-			_customTreeView.Location = new Point(5,60);
-			_customTreeView.Size = new Size(230,440);
+			_customTreeView.Location = new Point(7,64);
+			_customTreeView.Size = new Size(230,510);
 			_customTreeView.NodeMouseClick += new TreeNodeMouseClickEventHandler(_onCustomTreeNodeClick);
 			_customTreeView.NodeDrop += new CustomTreeView.NodeDropHandler(_onCustomTreeNodeDrop);
 			_customTreeView.AfterSelect += new TreeViewEventHandler(_onCustomTreeViewAfterSelect);
@@ -66,7 +66,7 @@ namespace TaskManager
 			this.Controls.Add(_customTreeView);
 			
 			_taskTitleTextBox = new TextBox();
-			_taskTitleTextBox.Location = new Point(243,60);
+			_taskTitleTextBox.Location = new Point(244,65);
 			_taskTitleTextBox.Size = new Size(240,40);
 			_taskTitleTextBox.BackColor = Color.White;
 			_taskTitleTextBox.TextAlign = HorizontalAlignment.Center;
@@ -74,7 +74,7 @@ namespace TaskManager
 			this.Controls.Add(_taskTitleTextBox);
 			
 			_taskNotesTextBox = new TextBox();
-			_taskNotesTextBox.Location = new Point(243,95);
+			_taskNotesTextBox.Location = new Point(244,99);
 			_taskNotesTextBox.Size = new Size(240,300);
 			_taskNotesTextBox.BackColor = Color.White;
 			_taskNotesTextBox.Multiline = true;
@@ -108,7 +108,7 @@ namespace TaskManager
 			_taskSaveChangesButton.Font = new Font("Arial", 14);
 			_taskSaveChangesButton.Text = "Save Changes";		
 			_taskSaveChangesButton.Location = new Point(243,540);
-			_taskSaveChangesButton.Size = new Size(240,35);
+			_taskSaveChangesButton.Size = new Size(242,35);
 			_taskSaveChangesButton.Click += new EventHandler(_onSaveTaskChangesButtonClick);
 			this.Controls.Add(_taskSaveChangesButton);
 			
@@ -121,14 +121,14 @@ namespace TaskManager
 			{
 				CustomToolbarButton toolbarButton = new CustomToolbarButton();
 				toolbarButton.BackgroundImageLayout = ImageLayout.Center;
-				toolbarButton.Location = new Point(5 + i * toolbarButton.Size.Width + i * 5, 5);
+				toolbarButton.Location = new Point(7 + i * toolbarButton.Size.Width + i * 5, 5);
 				this.Controls.Add(toolbarButton);
 				
 				if (i == 0) _toolbarButtonsDict.Add("addtasklist",toolbarButton);
 				if (i == 1) _toolbarButtonsDict.Add("addtask",toolbarButton);
-				if (i == 2) _toolbarButtonsDict.Add("removetask",toolbarButton);
-				if (i == 3) _toolbarButtonsDict.Add("addtask1",toolbarButton);
-				if (i == 4) _toolbarButtonsDict.Add("synchronize",toolbarButton);
+				if (i == 2) _toolbarButtonsDict.Add("removetasklistortask",toolbarButton);
+				if (i == 3) _toolbarButtonsDict.Add("synchronize",toolbarButton);
+				if (i == 4) _toolbarButtonsDict.Add("settings",toolbarButton);
 			}
 			
 			Debug.WriteLine(AppDomain.CurrentDomain.BaseDirectory);
@@ -139,10 +139,14 @@ namespace TaskManager
 			_toolbarButtonsDict["addtask"].BackgroundImage = Image.FromFile(AppDomain.CurrentDomain.BaseDirectory + "\\icons\\addtask.png");
 			_toolbarButtonsDict["addtask"].Click += new EventHandler(_onAddTaskButtonClick);
 			
+			_toolbarButtonsDict["removetasklistortask"].BackgroundImage = Image.FromFile(AppDomain.CurrentDomain.BaseDirectory + "\\icons\\removetasklistortask.png");
+			_toolbarButtonsDict["removetasklistortask"].Click += new EventHandler(_onRemoveButtonClick);
+			
 			_toolbarButtonsDict["synchronize"].BackgroundImage = Image.FromFile(AppDomain.CurrentDomain.BaseDirectory + "\\icons\\synchronize.png");
 			_toolbarButtonsDict["synchronize"].Click += new EventHandler(_onSynchronizeButtonClick);
 			
-			_toolbarButtonsDict["addtask1"].Click += new EventHandler(_onDBButtonClick);
+			_toolbarButtonsDict["settings"].BackgroundImage = Image.FromFile(AppDomain.CurrentDomain.BaseDirectory + "\\icons\\settings.png");
+			_toolbarButtonsDict["settings"].Click += new EventHandler(_onSettingsButtonClick);
 			
 			_authenticator = new Authenticator("167957637234.apps.googleusercontent.com",
 			                                  "rNm8WIonWEdVJKzWf3N76RaW",
@@ -203,11 +207,14 @@ namespace TaskManager
 		
 		
 		//CustomTreeView Section
-		private void reloadCustomTreeViewData()
+		private void _reloadCustomTreeViewData()
 		{
 			IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList;
 			IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks select selectedDBTask;
 			_customTreeView.reloadData(selectedDBTaskLists, selectedDBTasks);
+			
+			TreeNodeWithId selectedNode = (TreeNodeWithId)_customTreeView.SelectedNode;
+			this._reloadTaskControlsData(selectedNode);
 		}
 		
 		private void _onCustomTreeNodeClick(object sender, TreeNodeMouseClickEventArgs e)
@@ -232,17 +239,17 @@ namespace TaskManager
 		
 		private void _onCustomTreeViewAfterSelect(object sender, TreeViewEventArgs e)
 		{
-			TreeNodeWithId clickedNode = (TreeNodeWithId)e.Node;
-			_reloadTaskControlsData(clickedNode);
+			TreeNodeWithId selectedNode = (TreeNodeWithId)e.Node;
+			_reloadTaskControlsData(selectedNode);
 		}
 		
-		private void _reloadTaskControlsData(TreeNodeWithId clickedNode)
+		private void _reloadTaskControlsData(TreeNodeWithId selectedNode)
 		{
-				if (_customTreeView.isTaskNode(clickedNode))
+				if (_customTreeView.isTaskNode(selectedNode))
 				{
 					_enableTaskControls(true);
 					
-					IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks where selectedDBTask.id.Equals(clickedNode.id) select selectedDBTask;
+					IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks where selectedDBTask.id.Equals(selectedNode.id) select selectedDBTask;
 					foreach(DBTask dbTask in selectedDBTasks)
 					{
 						_taskTitleTextBox.Text = dbTask.title;
@@ -258,11 +265,11 @@ namespace TaskManager
 				else
 					_enableTaskControls(false);
 				
-				if (_customTreeView.isTaskListNode(clickedNode))
+				if (_customTreeView.isTaskListNode(selectedNode))
 				{
 					_enableTaskListControls(true);
 					
-					IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists where selectedDBTaskList.id.Equals(clickedNode.id) select selectedDBTaskList;
+					IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists where selectedDBTaskList.id.Equals(selectedNode.id) select selectedDBTaskList;
 					foreach(DBTaskList dbTaskList in selectedDBTaskLists)
 					{
 						_taskTitleTextBox.Text = dbTaskList.title;
@@ -277,39 +284,7 @@ namespace TaskManager
 		{
 			if (e.KeyCode == Keys.Delete)
 			{
-				TreeNodeWithId selectedNodeInTreeView = (TreeNodeWithId)_customTreeView.SelectedNode;	
-				
-				if (_customTreeView.isTaskListNode(selectedNodeInTreeView))
-				{
-					IQueryable<DBTask> dbTasksToDelete = from selectedDBTask in _dbManager.tasks where selectedDBTask.taskListId.Equals(selectedNodeInTreeView.id) select selectedDBTask;
-					foreach(DBTask dbTask in dbTasksToDelete)
-					{
-						dbTask.deleted = true;
-						dbTask.updated = DateTime.Now;
-					}
-					
-					IQueryable<DBTaskList> dbTaskListsToDelete = from selectedDBTaskList in _dbManager.tasklists where selectedDBTaskList.id.Equals(selectedNodeInTreeView.id) select selectedDBTaskList;
-					foreach(DBTaskList dbTaskList in dbTaskListsToDelete)
-					{
-						dbTaskList.mustBeDeletedOnGoogle = true;
-						dbTaskList.updated = DateTime.Now;
-						Debug.WriteLine("dbTaskList = " + dbTaskList.title + " must be deleted");
-					}
-				}
-				
-				if (_customTreeView.isTaskNode(selectedNodeInTreeView))
-				{
-			    	IQueryable<DBTask> dbTasksToDelete = from selectedDBTask in _dbManager.tasks where selectedDBTask.id.Equals(selectedNodeInTreeView.id) select selectedDBTask;
-					foreach(DBTask dbTask in dbTasksToDelete)
-					{
-						Debug.WriteLine("dbTask to del = " + dbTask.title);
-						dbTask.deleted = true;
-						dbTask.updated = DateTime.Now;
-					}
-				}
-				
-				_dbManager.SubmitChanges();
-				selectedNodeInTreeView.Remove();
+				this._onRemoveButtonClick(sender,e);
 			}
 		}
 		//End of CustomTreeView Section
@@ -319,6 +294,7 @@ namespace TaskManager
 		{
 			_taskCurrentDateLabel.setDate(DateTime.Now);
 		}
+		//End of Timer Section
 		
 		
 		private void _onSaveTaskChangesButtonClick(object sender, EventArgs e)
@@ -357,18 +333,20 @@ namespace TaskManager
 						_dbManager.SubmitChanges();
 					}
 			}
-			reloadCustomTreeViewData();
+			_reloadCustomTreeViewData();
 		}
 		
 		
 		//ToolBar Buttons Section
 		private void _onAddTaskListButtonClick(object sender, EventArgs e)
 		{
-			_dbManager.addNewDBTaskList();
+			TreeNodeWithId selectedNode = (TreeNodeWithId)_customTreeView.SelectedNode;
 			
-			IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList;
-			IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks select selectedDBTask;
-			_customTreeView.reloadData(selectedDBTaskLists, selectedDBTasks);
+			if (selectedNode != null)
+			{
+				_dbManager.addNewDBTaskList();
+				this._reloadCustomTreeViewData();
+			}
 		}
 		
 		private void _onAddTaskButtonClick(object sender, EventArgs e)
@@ -386,12 +364,29 @@ namespace TaskManager
 					selectedNode = (TreeNodeWithId)_customTreeView.SelectedNode.Parent;
 					_dbManager.addNewDBTask(selectedNode.id);
 				}
-				IQueryable<DBTaskList> selectedDBTaskLists = from selectedDBTaskList in _dbManager.tasklists select selectedDBTaskList;
-				IQueryable<DBTask> selectedDBTasks = from selectedDBTask in _dbManager.tasks select selectedDBTask;
-				_customTreeView.reloadData(selectedDBTaskLists, selectedDBTasks);
+				this._reloadCustomTreeViewData();
 			}
 		}
 		
+		private void _onRemoveButtonClick(object sender, EventArgs e)
+		{
+			Debug.WriteLine("Called");
+			TreeNodeWithId selectedNodeInTreeView = (TreeNodeWithId)_customTreeView.SelectedNode;	
+				
+			if (selectedNodeInTreeView != null)
+			{
+				if (_customTreeView.isTaskListNode(selectedNodeInTreeView))
+				{
+					_dbManager.removeDBTaskList(selectedNodeInTreeView.id);
+				}
+				
+				if (_customTreeView.isTaskNode(selectedNodeInTreeView))
+				{
+					_dbManager.removeDBTask(selectedNodeInTreeView.id);
+				}
+				selectedNodeInTreeView.Remove();
+			}
+		}
 		
 		private void _onDBButtonClick(object sender, EventArgs e)
 		{
@@ -430,6 +425,11 @@ namespace TaskManager
 			                          		_customTreeView.reloadData(selectedDBTaskLists, selectedDBTasks);
 			                           		_toolbarButtonsDict["synchronize"].Enabled = true;      	
 		                                }));
+		}
+	
+		private void _onSettingsButtonClick(object sender, EventArgs e)
+		{
+			Debug.WriteLine("There will be settings view");
 		}
 	}
 }

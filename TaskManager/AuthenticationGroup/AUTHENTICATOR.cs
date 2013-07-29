@@ -177,7 +177,5 @@ namespace TaskManager
      		state.AccessToken = _accessToken;
 	   		return state;
   		}
-
-
 	}
 }

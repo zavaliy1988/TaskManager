@@ -22,6 +22,21 @@ namespace TaskManager
 	[Table(Name = "tasklists")]
 	public class DBTaskList
 	{
+		[Column(IsPrimaryKey = true)]
+    	public string id;
+    	[Column]
+    	public string title;
+		[Column]
+    	public string selfLink;
+    	[Column]
+    	public DateTime updated;
+    	[Column]
+    	public bool mustBeCreatedOnGoogle;
+       	[Column]
+    	public bool mustBeDeletedOnGoogle;
+    	[Column]
+    	public bool wasSynchronized;
+			
 		public DBTaskList(TaskList gglTasklist) 
 		{
 			this.id = gglTasklist.Id;
@@ -40,21 +55,6 @@ namespace TaskManager
 		
 		}
 		
-    	[Column(IsPrimaryKey = true)]
-    	public string id;
-    	[Column]
-    	public string title;
-		[Column]
-    	public string selfLink;
-    	[Column]
-    	public DateTime updated;
-    	[Column]
-    	public bool mustBeCreatedOnGoogle;
-       	[Column]
-    	public bool mustBeDeletedOnGoogle;
-    	[Column]
-    	public bool wasSynchronized;
-    	
     	public TaskList toGGLTask()
     	{
     		TaskList gglTaskList = new TaskList();
